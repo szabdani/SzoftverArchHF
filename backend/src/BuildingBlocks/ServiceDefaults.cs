@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using BuildingBlocks.Auth;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
@@ -25,7 +26,13 @@ public static class ServiceDefaults
     /// <summary>Az alap middleware-ek (hibakezelés, hitelesítés, jogosultság) és a /health, /openapi végpontok.</summary>
     public static WebApplication UseServiceDefaults(this WebApplication app)
     {
-        app.UseExceptionHandler();
+        // A hibás kérés (pl. nem értelmezhető JSON) 400 maradjon, ne legyen belőle 500.
+        app.UseExceptionHandler(new ExceptionHandlerOptions
+        {
+            StatusCodeSelector = exception => exception is BadHttpRequestException badRequest
+                ? badRequest.StatusCode
+                : StatusCodes.Status500InternalServerError,
+        });
         app.UseStatusCodePages();
         app.UseAuthentication();
         app.UseAuthorization();
