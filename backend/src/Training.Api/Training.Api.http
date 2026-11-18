@@ -70,3 +70,37 @@ Content-Type: application/json
 ### Edzés törlése
 DELETE {{gateway}}/api/training/workouts/{{workoutId}}
 Authorization: Bearer {{token}}
+
+### Cél kitűzése (az előző aktív cél archiválódik)
+# @name goal
+POST {{gateway}}/api/training/goals
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "halfMarathon",
+  "targetDate": "2027-04-12",
+  "targetTime": "01:45:00"
+}
+
+###
+@goalId = {{goal.response.body.$.id}}
+
+### Egyéni távú cél módosítása
+PUT {{gateway}}/api/training/goals/{{goalId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "custom",
+  "distanceKm": 30,
+  "targetDate": "2027-05-01"
+}
+
+### Célnézet: aktív cél, hátralévő hetek, legutóbbi edzések
+GET {{gateway}}/api/training/goals/active
+Authorization: Bearer {{token}}
+
+### Összes cél (az aktív elöl)
+GET {{gateway}}/api/training/goals
+Authorization: Bearer {{token}}
