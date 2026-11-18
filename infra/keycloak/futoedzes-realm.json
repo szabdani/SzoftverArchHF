@@ -11,20 +11,43 @@
   "rememberMe": true,
   "roles": {
     "realm": [
-      { "name": "runner", "description": "Futó" },
-      { "name": "coach", "description": "Edző" },
-      { "name": "admin", "description": "Adminisztrátor" },
-      { "name": "offline_access", "description": "${role_offline-access}" },
-      { "name": "uma_authorization", "description": "${role_uma_authorization}" },
+      {
+        "name": "runner",
+        "description": "Futó"
+      },
+      {
+        "name": "coach",
+        "description": "Edző"
+      },
+      {
+        "name": "admin",
+        "description": "Adminisztrátor"
+      },
+      {
+        "name": "offline_access",
+        "description": "${role_offline-access}"
+      },
+      {
+        "name": "uma_authorization",
+        "description": "${role_uma_authorization}"
+      },
       {
         "name": "default-roles-futoedzes",
         "description": "Új felhasználó alapértelmezett szerepkörei: futó.",
         "composite": true,
-        "composites": { "realm": ["runner", "offline_access", "uma_authorization"] }
+        "composites": {
+          "realm": [
+            "runner",
+            "offline_access",
+            "uma_authorization"
+          ]
+        }
       }
     ]
   },
-  "defaultRole": { "name": "default-roles-futoedzes" },
+  "defaultRole": {
+    "name": "default-roles-futoedzes"
+  },
   "clients": [
     {
       "clientId": "futoedzes-frontend",
@@ -35,8 +58,13 @@
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": true,
       "implicitFlowEnabled": false,
-      "redirectUris": ["http://localhost/*", "http://localhost:5173/*"],
-      "webOrigins": ["+"],
+      "redirectUris": [
+        "http://localhost/*",
+        "http://localhost:5173/*"
+      ],
+      "webOrigins": [
+        "+"
+      ],
       "attributes": {
         "pkce.code.challenge.method": "S256",
         "post.logout.redirect.uris": "http://localhost/*##http://localhost:5173/*"
@@ -55,6 +83,18 @@
           }
         }
       ]
+    },
+    {
+      "clientId": "futoedzes-identity-admin",
+      "name": "Identity szolgáltatás (felhasználókezelés)",
+      "description": "Az Identity.Api ezzel a service accounttal hívja a Keycloak Admin API-t (UC16).",
+      "enabled": true,
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "secret": "futoedzes-identity-admin-secret",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true
     }
   ],
   "users": [
@@ -65,8 +105,16 @@
       "enabled": true,
       "firstName": "Admin",
       "lastName": "Felhasználó",
-      "credentials": [{ "type": "password", "value": "Demo1234", "temporary": false }],
-      "realmRoles": ["admin"]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "admin"
+      ]
     },
     {
       "username": "coach@futoedzes.local",
@@ -75,8 +123,16 @@
       "enabled": true,
       "firstName": "Edző",
       "lastName": "Demó",
-      "credentials": [{ "type": "password", "value": "Demo1234", "temporary": false }],
-      "realmRoles": ["coach"]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "coach"
+      ]
     },
     {
       "username": "runner@futoedzes.local",
@@ -85,8 +141,16 @@
       "enabled": true,
       "firstName": "Futó",
       "lastName": "Egy",
-      "credentials": [{ "type": "password", "value": "Demo1234", "temporary": false }],
-      "realmRoles": ["default-roles-futoedzes"]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-futoedzes"
+      ]
     },
     {
       "username": "runner2@futoedzes.local",
@@ -95,8 +159,29 @@
       "enabled": true,
       "firstName": "Futó",
       "lastName": "Kettő",
-      "credentials": [{ "type": "password", "value": "Demo1234", "temporary": false }],
-      "realmRoles": ["default-roles-futoedzes"]
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-futoedzes"
+      ]
+    },
+    {
+      "username": "service-account-futoedzes-identity-admin",
+      "enabled": true,
+      "serviceAccountClientId": "futoedzes-identity-admin",
+      "clientRoles": {
+        "realm-management": [
+          "view-users",
+          "query-users",
+          "manage-users",
+          "view-realm"
+        ]
+      }
     }
   ]
 }

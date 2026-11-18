@@ -3,9 +3,11 @@
     <Project Path="src/Analytics.Api/Analytics.Api.csproj" />
     <Project Path="src/BuildingBlocks/BuildingBlocks.csproj" />
     <Project Path="src/Contracts/Contracts.csproj" />
+    <Project Path="src/Identity.Api/Identity.Api.csproj" />
     <Project Path="src/Training.Api/Training.Api.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Identity.Api.Tests/Identity.Api.Tests.csproj" />
     <Project Path="tests/Training.Api.Tests/Training.Api.Tests.csproj" />
     <Project Path="tests/Analytics.Api.Tests/Analytics.Api.Tests.csproj" />
   </Folder>

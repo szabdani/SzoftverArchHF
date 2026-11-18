@@ -1,0 +1,89 @@
+# Identity API kipróbálása a docker compose-zal futó rendszeren (http://localhost).
+# Az edző meghívja a futót, a futó elfogad, utána az edző látja a futó edzéseit.
+
+@gateway = http://localhost
+
+### Edző token (coach@futoedzes.local / Demo1234)
+# @name coachLogin
+POST {{gateway}}/auth/realms/futoedzes/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id=futoedzes-frontend&username=coach@futoedzes.local&password=Demo1234
+
+### Futó token (runner@futoedzes.local / Demo1234)
+# @name runnerLogin
+POST {{gateway}}/auth/realms/futoedzes/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id=futoedzes-frontend&username=runner@futoedzes.local&password=Demo1234
+
+###
+@coachToken = {{coachLogin.response.body.$.access_token}}
+@runnerToken = {{runnerLogin.response.body.$.access_token}}
+
+### Edző: futó meghívása
+# @name invite
+POST {{gateway}}/api/identity/invitations
+Authorization: Bearer {{coachToken}}
+Content-Type: application/json
+
+{ "email": "runner@futoedzes.local" }
+
+###
+@invitationId = {{invite.response.body.$.id}}
+
+### Edző: elküldött meghívások
+GET {{gateway}}/api/identity/invitations/sent
+Authorization: Bearer {{coachToken}}
+
+### Futó: kapott meghívások
+GET {{gateway}}/api/identity/invitations/received
+Authorization: Bearer {{runnerToken}}
+
+### Futó: meghívás elfogadása
+# @name accept
+POST {{gateway}}/api/identity/invitations/{{invitationId}}/accept
+Authorization: Bearer {{runnerToken}}
+
+###
+@runnerId = {{accept.response.body.$.runnerId}}
+
+### Edző: a futói
+GET {{gateway}}/api/identity/links
+Authorization: Bearer {{coachToken}}
+
+### Edző: a hozzárendelt futó edzései (a Training szolgáltatás az eseményből tudja, hogy szabad)
+GET {{gateway}}/api/training/workouts?runnerId={{runnerId}}
+Authorization: Bearer {{coachToken}}
+
+### Futó: kapcsolat megszüntetése (utána az edző 403-at kap a fenti kérésre)
+DELETE {{gateway}}/api/identity/links/{{invitationId}}
+Authorization: Bearer {{runnerToken}}
+
+### Admin token (admin@futoedzes.local / Demo1234)
+# @name adminLogin
+POST {{gateway}}/auth/realms/futoedzes/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id=futoedzes-frontend&username=admin@futoedzes.local&password=Demo1234
+
+###
+@adminToken = {{adminLogin.response.body.$.access_token}}
+
+### Admin: felhasználók keresése szerepkörrel (UC16)
+GET {{gateway}}/api/identity/admin/users?search=runner
+Authorization: Bearer {{adminToken}}
+
+### Admin: a futóból edző lesz (a változás a következő bejelentkezéskor / token frissítéskor él)
+PUT {{gateway}}/api/identity/admin/users/{{runnerId}}/role
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{ "role": "coach" }
+
+### Admin: felhasználó letiltása
+PUT {{gateway}}/api/identity/admin/users/{{runnerId}}/enabled
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{ "enabled": false }
