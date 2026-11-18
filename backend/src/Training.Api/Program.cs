@@ -2,6 +2,7 @@ using BuildingBlocks;
 using BuildingBlocks.Messaging;
 using BuildingBlocks.Persistence;
 using Training.Api.CoachLinks;
+using Training.Api.Demo;
 using Training.Api.Goals;
 using Training.Api.Persistence;
 using Training.Api.Plans;
@@ -14,6 +15,7 @@ builder.Services.AddPostgresDbContext<TrainingDbContext>(builder.Configuration);
 builder.Services.AddMessaging<TrainingDbContext>(builder.Configuration, "training", bus =>
 {
     bus.AddConsumer<CoachRunnerLinkConsumer>();
+    bus.AddConsumer<DemoDataConsumer>();
 });
 builder.Services.AddScoped<IWorkoutService, WorkoutService>();
 builder.Services.AddScoped<IGoalService, GoalService>();

@@ -87,3 +87,11 @@ Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 { "enabled": false }
+
+### Admin: demóadatok létrehozása / újragenerálása (UC18): 4 szimulált futó a coach@futoedzes.local edzőhöz
+POST {{gateway}}/api/identity/admin/demo
+Authorization: Bearer {{adminToken}}
+
+### Admin: demóadatok törlése
+DELETE {{gateway}}/api/identity/admin/demo
+Authorization: Bearer {{adminToken}}
