@@ -17,6 +17,7 @@ docker compose up --build
 
 | Cím | Mi ez |
 |---|---|
+| http://localhost/api/analytics | Analytics API (terhelés, kockázati pontszám) |
 | http://localhost/api/training | Training API (edzések) |
 | http://localhost/api/identity | Identity API (edzői meghívások, kapcsolatok) |
 | http://localhost/auth | Keycloak (admin konzol: `/auth/admin`, `admin` / `admin`) |
