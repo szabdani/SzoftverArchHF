@@ -1,3 +1,4 @@
+using Analytics.Api.Alerts;
 using Analytics.Api.ReadModels;
 using Analytics.Api.Risk;
 using BuildingBlocks.CoachAccess;
@@ -8,13 +9,14 @@ namespace Analytics.Api.Persistence;
 
 /// <summary>
 /// Az Analytics szolgáltatás adatbázisa: az edzések és tervezett edzések helyi másolata,
-/// az edző–futó kapcsolatok, és a kiszámolt kockázati pontszámok.
+/// az edző–futó kapcsolatok, a kiszámolt kockázati pontszámok és a figyelmeztetések.
 /// </summary>
 public class AnalyticsDbContext(DbContextOptions<AnalyticsDbContext> options) : DbContext(options), ICoachRunnerLinkStore
 {
     public DbSet<WorkoutRecord> Workouts => Set<WorkoutRecord>();
     public DbSet<PlannedWorkoutRecord> PlannedWorkouts => Set<PlannedWorkoutRecord>();
     public DbSet<RiskScoreSnapshot> RiskScoreSnapshots => Set<RiskScoreSnapshot>();
+    public DbSet<Alert> Alerts => Set<Alert>();
     public DbSet<CoachRunnerLink> CoachRunnerLinks => Set<CoachRunnerLink>();
 
     /// <summary>
@@ -49,6 +51,18 @@ public class AnalyticsDbContext(DbContextOptions<AnalyticsDbContext> options) : 
             snapshot.Property(x => x.WeeklyKm).HasPrecision(7, 2);
             snapshot.Property(x => x.PreviousWeeklyKm).HasPrecision(7, 2);
             snapshot.HasIndex(x => new { x.RunnerId, x.Date }).IsUnique();
+        });
+
+        modelBuilder.Entity<Alert>(alert =>
+        {
+            alert.HasKey(x => x.Id);
+            alert.Property(x => x.Rule).HasConversion<string>().HasMaxLength(40);
+            alert.Property(x => x.Severity).HasConversion<string>().HasMaxLength(20);
+            alert.Property(x => x.Message).HasMaxLength(300);
+            alert.Property(x => x.PeriodKey).HasMaxLength(60);
+
+            // Ugyanaz a szabály ugyanarra az időszakra egyszer (spec 3.6).
+            alert.HasIndex(x => new { x.RunnerId, x.Rule, x.PeriodKey }).IsUnique();
         });
 
         modelBuilder.AddCoachRunnerLinks();

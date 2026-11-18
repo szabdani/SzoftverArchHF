@@ -13,7 +13,8 @@ public enum RiskCategory
 
 /// <summary>
 /// Egy számítás eredménye: a terhelési mutatók, a pontszám, a kategória és a teljesült szabályok
-/// szöveges indoklása.
+/// szöveges indoklása. A mutatókból a figyelmeztetések is készülnek (spec 3.6), így a számítás
+/// egyszer fut, és két funkciót szolgál ki.
 /// </summary>
 public record RiskResult(
     double AcuteLoad,
@@ -23,7 +24,10 @@ public record RiskResult(
     decimal PreviousWeeklyKm,
     int Score,
     RiskCategory Category,
-    List<string> Reasons);
+    List<string> Reasons,
+    int IntenseDaysLast7,
+    DateOnly? ConsecutiveIntenseStart,
+    bool NoRestDay);
 
 /// <summary>
 /// Szabályalapú túlterhelési kockázati pontszám (spec 3.8). Determinisztikus, I/O nélküli számítás,
@@ -113,7 +117,8 @@ public static class RiskCalculator
         }
 
         // Pihenőnap hiánya: az utolsó 7 nap mindegyikén volt edzés.
-        if (last7.Select(w => w.Date).Distinct().Count() == 7)
+        var noRestDay = last7.Select(w => w.Date).Distinct().Count() == 7;
+        if (noRestDay)
         {
             score += NoRestDayPoints;
             reasons.Add("7 egymást követő edzésnap, nincs pihenőnap");
@@ -126,7 +131,9 @@ public static class RiskCalculator
         }
 
         score = Math.Min(score, MaxScore);
-        return new RiskResult(acuteLoad, chronicLoad, acwr, weeklyKm, previousWeeklyKm, score, CategoryFor(score), reasons);
+        return new RiskResult(
+            acuteLoad, chronicLoad, acwr, weeklyKm, previousWeeklyKm, score, CategoryFor(score), reasons,
+            intenseDays.Count, firstOfPair, noRestDay);
     }
 
     /// <summary>

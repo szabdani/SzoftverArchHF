@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Analytics.Api.Alerts;
 using Analytics.Api.Persistence;
 using BuildingBlocks.Auth;
 using BuildingBlocks.CoachAccess;
@@ -9,7 +10,8 @@ using Microsoft.EntityFrameworkCore;
 namespace Analytics.Api.Risk;
 
 /// <summary>
-/// A kockázati pontszám tárolása és lekérdezése. Maga a számítás a <see cref="RiskCalculator"/>-ban van.
+/// A kockázati pontszám és a figyelmeztetések újraszámolása és tárolása, a pontszám lekérdezése.
+/// Maga a számítás a <see cref="RiskCalculator"/>-ban és az <see cref="AlertRules"/>-ban van.
 /// </summary>
 public class RiskService(AnalyticsDbContext db, TimeProvider time) : IRiskService
 {
@@ -40,7 +42,7 @@ public class RiskService(AnalyticsDbContext db, TimeProvider time) : IRiskServic
     }
 
     /// <summary>
-    /// Újraszámolja és eltárolja (felülírja) a futó mai pontszámát.
+    /// Újraszámolja és eltárolja (felülírja) a futó mai pontszámát, és létrehozza az új figyelmeztetéseket.
     /// </summary>
     public async Task RecalculateAsync(Guid runnerId, CancellationToken ct)
     {
@@ -58,13 +60,14 @@ public class RiskService(AnalyticsDbContext db, TimeProvider time) : IRiskServic
             .MinAsync(workout => (DateOnly?)workout.Date, ct);
 
         // Kihagyott tervezett edzések az utolsó 7 napban.
-        var missedLast7Days = await db.PlannedWorkouts.CountAsync(plannedWorkout =>
-            plannedWorkout.RunnerId == runnerId
-            && plannedWorkout.Status == PlannedWorkoutStatus.Missed
-            && plannedWorkout.Date >= today.AddDays(-6)
-            && plannedWorkout.Date <= today, ct);
+        var missedLast7Days = await db.PlannedWorkouts
+            .Where(plannedWorkout => plannedWorkout.RunnerId == runnerId
+                && plannedWorkout.Status == PlannedWorkoutStatus.Missed
+                && plannedWorkout.Date >= today.AddDays(-6)
+                && plannedWorkout.Date <= today)
+            .ToListAsync(ct);
 
-        var result = RiskCalculator.Calculate(workouts, missedLast7Days, today, firstWorkoutDate);
+        var result = RiskCalculator.Calculate(workouts, missedLast7Days.Count, today, firstWorkoutDate);
 
         var snapshot = await db.RiskScoreSnapshots.FirstOrDefaultAsync(snapshot => snapshot.RunnerId == runnerId && snapshot.Date == today, ct);
         if (snapshot is null)
@@ -74,6 +77,7 @@ public class RiskService(AnalyticsDbContext db, TimeProvider time) : IRiskServic
         }
 
         snapshot.Apply(result, time.GetUtcNow());
+        await AddNewAlertsAsync(runnerId, AlertRules.Evaluate(result, missedLast7Days, today), ct);
         await db.SaveChangesAsync(ct);
     }
 
@@ -97,5 +101,39 @@ public class RiskService(AnalyticsDbContext db, TimeProvider time) : IRiskServic
         }
 
         return runnerIds.Count;
+    }
+
+    /// <summary>
+    /// Felveszi azokat a figyelmeztetéseket, amelyekhez ugyanarra a szabályra és időszakra még nincs
+    /// (nyugtázott vagy nyugtázatlan) figyelmeztetés.
+    /// </summary>
+    private async Task AddNewAlertsAsync(Guid runnerId, List<AlertCandidate> candidates, CancellationToken ct)
+    {
+        if (candidates.Count == 0)
+        {
+            return;
+        }
+
+        // A futó már meglévő (szabály, időszak) párjai; a jelöltek közül csak az újak kellenek.
+        var periodKeys = candidates.Select(candidate => candidate.PeriodKey).Distinct().ToList();
+        var existing = await db.Alerts
+            .Where(alert => alert.RunnerId == runnerId && periodKeys.Contains(alert.PeriodKey))
+            .Select(alert => new { alert.Rule, alert.PeriodKey })
+            .ToListAsync(ct);
+
+        var now = time.GetUtcNow();
+        foreach (var candidate in candidates.Where(c => !existing.Any(e => e.Rule == c.Rule && e.PeriodKey == c.PeriodKey)))
+        {
+            db.Alerts.Add(new Alert
+            {
+                Id = Guid.CreateVersion7(now),
+                RunnerId = runnerId,
+                Rule = candidate.Rule,
+                Severity = candidate.Severity,
+                Message = candidate.Message,
+                PeriodKey = candidate.PeriodKey,
+                CreatedAt = now,
+            });
+        }
     }
 }

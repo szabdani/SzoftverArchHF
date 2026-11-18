@@ -1,3 +1,4 @@
+using Analytics.Api.Alerts;
 using Analytics.Api.CoachLinks;
 using Analytics.Api.Persistence;
 using Analytics.Api.ReadModels;
@@ -18,12 +19,14 @@ builder.Services.AddMessaging<AnalyticsDbContext>(builder.Configuration, "analyt
     bus.AddConsumer<CoachRunnerLinkConsumer>();
 });
 builder.Services.AddScoped<IRiskService, RiskService>();
+builder.Services.AddScoped<IAlertService, AlertService>();
 builder.Services.AddHostedService<DailyRiskJob>();
 
 var app = builder.Build();
 
 app.UseServiceDefaults();
 app.MapRiskEndpoints();
+app.MapAlertEndpoints();
 
 await app.MigrateDatabaseAsync<AnalyticsDbContext>();
 await app.RunAsync();
