@@ -6,15 +6,16 @@ using MassTransit;
 namespace Analytics.Api.ReadModels;
 
 /// <summary>
-/// A Training szolgáltatás eseményeiből karbantartja az edzések és tervezett edzések helyi másolatát,
-/// majd újraszámolja a futó kockázati pontszámát (UC20).
+/// A Training szolgáltatás eseményeiből karbantartja az edzések, tervezett edzések és az aktív cél helyi
+/// másolatát, majd az edzés-eseményeknél újraszámolja a futó kockázati pontszámát (UC20).
 /// </summary>
 public class TrainingEventsConsumer(AnalyticsDbContext db, IRiskService riskService) :
     IConsumer<WorkoutRecorded>,
     IConsumer<WorkoutUpdated>,
     IConsumer<WorkoutDeleted>,
     IConsumer<PlannedWorkoutChanged>,
-    IConsumer<PlannedWorkoutRemoved>
+    IConsumer<PlannedWorkoutRemoved>,
+    IConsumer<RunnerGoalChanged>
 {
     /// <summary>
     /// Új edzés: felvétel a helyi másolatba, majd újraszámolás.
@@ -83,6 +84,25 @@ public class TrainingEventsConsumer(AnalyticsDbContext db, IRiskService riskServ
         }
 
         await riskService.RecalculateAsync(message.RunnerId, context.CancellationToken);
+    }
+
+    /// <summary>
+    /// Új vagy módosított aktív cél: a futó célja a helyi másolatban felülíródik (a javaslathoz kell).
+    /// </summary>
+    public async Task Consume(ConsumeContext<RunnerGoalChanged> context)
+    {
+        var message = context.Message;
+        var record = await db.ActiveGoals.FindAsync([message.RunnerId], context.CancellationToken);
+        if (record is null)
+        {
+            record = new ActiveGoalRecord { RunnerId = message.RunnerId };
+            db.ActiveGoals.Add(record);
+        }
+
+        record.Type = message.Type;
+        record.DistanceKm = message.DistanceKm;
+        record.TargetDate = message.TargetDate;
+        await db.SaveChangesAsync(context.CancellationToken);
     }
 
     /// <summary>

@@ -76,6 +76,33 @@ namespace Analytics.Api.Persistence.Migrations
                     b.ToTable("alerts", (string)null);
                 });
 
+            modelBuilder.Entity("Analytics.Api.ReadModels.ActiveGoalRecord", b =>
+                {
+                    b.Property<Guid>("RunnerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("runner_id");
+
+                    b.Property<decimal>("DistanceKm")
+                        .HasPrecision(7, 4)
+                        .HasColumnType("numeric(7,4)")
+                        .HasColumnName("distance_km");
+
+                    b.Property<DateOnly>("TargetDate")
+                        .HasColumnType("date")
+                        .HasColumnName("target_date");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("type");
+
+                    b.HasKey("RunnerId")
+                        .HasName("pk_active_goals");
+
+                    b.ToTable("active_goals", (string)null);
+                });
+
             modelBuilder.Entity("Analytics.Api.ReadModels.PlannedWorkoutRecord", b =>
                 {
                     b.Property<Guid>("Id")

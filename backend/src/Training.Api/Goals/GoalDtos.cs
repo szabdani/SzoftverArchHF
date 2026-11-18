@@ -1,3 +1,4 @@
+using Contracts;
 using Training.Api.Workouts;
 
 namespace Training.Api.Goals;

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Analytics.Api.Persistence;
 
 /// <summary>
-/// Az Analytics szolgáltatás adatbázisa: az edzések és tervezett edzések helyi másolata,
+/// Az Analytics szolgáltatás adatbázisa: az edzések, tervezett edzések és aktív célok helyi másolata,
 /// az edző–futó kapcsolatok, a kiszámolt kockázati pontszámok és a figyelmeztetések.
 /// </summary>
 public class AnalyticsDbContext(DbContextOptions<AnalyticsDbContext> options) : DbContext(options), ICoachRunnerLinkStore
@@ -17,6 +17,7 @@ public class AnalyticsDbContext(DbContextOptions<AnalyticsDbContext> options) : 
     public DbSet<PlannedWorkoutRecord> PlannedWorkouts => Set<PlannedWorkoutRecord>();
     public DbSet<RiskScoreSnapshot> RiskScoreSnapshots => Set<RiskScoreSnapshot>();
     public DbSet<Alert> Alerts => Set<Alert>();
+    public DbSet<ActiveGoalRecord> ActiveGoals => Set<ActiveGoalRecord>();
     public DbSet<CoachRunnerLink> CoachRunnerLinks => Set<CoachRunnerLink>();
 
     /// <summary>
@@ -42,6 +43,14 @@ public class AnalyticsDbContext(DbContextOptions<AnalyticsDbContext> options) : 
             plannedWorkout.Property(x => x.Status).HasConversion<string>().HasMaxLength(20);
             plannedWorkout.Property(x => x.PlannedDistanceKm).HasPrecision(5, 2);
             plannedWorkout.HasIndex(x => new { x.RunnerId, x.Date });
+        });
+
+        modelBuilder.Entity<ActiveGoalRecord>(goal =>
+        {
+            goal.HasKey(x => x.RunnerId);
+            goal.Property(x => x.RunnerId).ValueGeneratedNever();
+            goal.Property(x => x.Type).HasConversion<string>().HasMaxLength(20);
+            goal.Property(x => x.DistanceKm).HasPrecision(7, 4);
         });
 
         modelBuilder.Entity<RiskScoreSnapshot>(snapshot =>

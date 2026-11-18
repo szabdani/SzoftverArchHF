@@ -2,6 +2,8 @@ using System.Security.Claims;
 using BuildingBlocks.Auth;
 using BuildingBlocks.CoachAccess;
 using BuildingBlocks.Time;
+using Contracts.Training;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Training.Api.Persistence;
 using Training.Api.Workouts;
@@ -9,9 +11,10 @@ using Training.Api.Workouts;
 namespace Training.Api.Goals;
 
 /// <summary>
-/// A célok üzleti logikája. Egy futónak egyszerre egy aktív célja lehet.
+/// A célok üzleti logikája. Egy futónak egyszerre egy aktív célja lehet. Az aktív cél változásáról
+/// esemény megy ki, mert az Analytics javaslata a cél típusából dolgozik.
 /// </summary>
-public class GoalService(TrainingDbContext db, TimeProvider time) : IGoalService
+public class GoalService(TrainingDbContext db, IPublishEndpoint publisher, TimeProvider time) : IGoalService
 {
     private const int RecentWorkoutCount = 5;
 
@@ -88,6 +91,9 @@ public class GoalService(TrainingDbContext db, TimeProvider time) : IGoalService
 
         var newGoal = Goal.Create(runnerId, input, now);
         db.Goals.Add(newGoal);
+
+        // A Publish a SaveChanges előtt kell: az outbox így ugyanabban a tranzakcióban menti az eseményt.
+        await publisher.Publish(new RunnerGoalChanged(runnerId, newGoal.Type, newGoal.DistanceKm, newGoal.TargetDate, now), ct);
         await db.SaveChangesAsync(ct);
 
         return GoalResponse.From(newGoal);
@@ -107,6 +113,7 @@ public class GoalService(TrainingDbContext db, TimeProvider time) : IGoalService
         }
 
         goal.Update(input);
+        await publisher.Publish(new RunnerGoalChanged(runnerId, goal.Type, goal.DistanceKm, goal.TargetDate, time.GetUtcNow()), ct);
         await db.SaveChangesAsync(ct);
 
         return GoalResponse.From(goal);
