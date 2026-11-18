@@ -17,6 +17,10 @@ grant_type=password&client_id=futoedzes-frontend&username=runner@futoedzes.local
 GET {{gateway}}/api/analytics/risk
 Authorization: Bearer {{token}}
 
+### Ajánlott következő edzés: típus, RPE-tartomány, időtartam, indoklás (UC10)
+GET {{gateway}}/api/analytics/recommendation
+Authorization: Bearer {{token}}
+
 ### Nyugtázatlan figyelmeztetések súlyosság szerint (UC09)
 # @name alerts
 GET {{gateway}}/api/analytics/alerts

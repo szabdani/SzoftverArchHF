@@ -1,3 +1,4 @@
+using Contracts;
 using Training.Api.Goals;
 
 namespace Training.Api.Tests.Goals;
