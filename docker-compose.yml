@@ -113,6 +113,44 @@ services:
       - traefik.http.routers.training.entrypoints=web
       - traefik.http.services.training.loadbalancer.server.port=8080
 
+  identity-db:
+    image: postgres:18.7-alpine
+    environment:
+      POSTGRES_DB: identity
+      POSTGRES_USER: identity
+      POSTGRES_PASSWORD: identity
+    ports:
+      - "5441:5432" # helyi `dotnet run`-hoz
+    volumes:
+      - identity-db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U identity -d identity"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Edzői meghívások és edző–futó kapcsolatok. Útvonal: http://localhost/api/identity
+  identity-api:
+    build:
+      context: ./backend
+      dockerfile: src/Identity.Api/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Default: Host=identity-db;Database=identity;Username=identity;Password=identity
+      RabbitMq__Host: rabbitmq
+      Keycloak__MetadataAddress: http://keycloak:8080/auth/realms/futoedzes/.well-known/openid-configuration
+    depends_on:
+      identity-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.identity.rule=PathPrefix(`/api/identity`)
+      - traefik.http.routers.identity.entrypoints=web
+      - traefik.http.services.identity.loadbalancer.server.port=8080
+
 volumes:
   keycloak-db-data:
   training-db-data:
+  identity-db-data:
