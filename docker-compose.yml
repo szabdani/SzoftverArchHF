@@ -139,6 +139,7 @@ services:
       ConnectionStrings__Default: Host=identity-db;Database=identity;Username=identity;Password=identity
       RabbitMq__Host: rabbitmq
       Keycloak__MetadataAddress: http://keycloak:8080/auth/realms/futoedzes/.well-known/openid-configuration
+      KeycloakAdmin__BaseUrl: http://keycloak:8080/auth
     depends_on:
       identity-db:
         condition: service_healthy
