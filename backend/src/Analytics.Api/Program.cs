@@ -12,7 +12,9 @@ builder.AddServiceDefaults();
 builder.Services.AddPostgresDbContext<AnalyticsDbContext>(builder.Configuration);
 builder.Services.AddMessaging<AnalyticsDbContext>(builder.Configuration, "analytics", bus =>
 {
-    bus.AddConsumer<TrainingEventsConsumer>();
+    // Egyszerre egy üzenet: így ugyanannak a futónak két eseménye nem számolja újra párhuzamosan
+    // (és egymást felülírva) a napi pontszámot.
+    bus.AddConsumer<TrainingEventsConsumer>().Endpoint(endpoint => endpoint.ConcurrentMessageLimit = 1);
     bus.AddConsumer<CoachRunnerLinkConsumer>();
 });
 builder.Services.AddScoped<IRiskService, RiskService>();
