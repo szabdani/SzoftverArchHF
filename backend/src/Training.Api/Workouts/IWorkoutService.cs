@@ -20,9 +20,11 @@ public interface IWorkoutService
     Task<WorkoutResponse?> GetAsync(ClaimsPrincipal user, Guid id, CancellationToken ct);
 
     /// <summary>
-    /// Új edzés rögzítése a bejelentkezett futó nevére.
+    /// Új edzés rögzítése a bejelentkezett futó nevére. Ha tervezett edzéshez tartozik (UC08),
+    /// az teljesítettre vált.
     /// </summary>
-    Task<WorkoutResponse> CreateAsync(ClaimsPrincipal user, ValidWorkoutInput input, CancellationToken ct);
+    /// <returns>A mentett edzés, vagy null, ha a megadott tervezett edzés nem a futóé vagy már teljesült.</returns>
+    Task<WorkoutResponse?> CreateAsync(ClaimsPrincipal user, ValidWorkoutInput input, CancellationToken ct);
 
     /// <summary>
     /// A futó saját edzésének módosítása.

@@ -6,6 +6,7 @@ namespace Training.Api.Workouts;
 /// Létrehozás és módosítás kérése. A kötelező mezők is nullable-k, hogy a hiányzó mezőt
 /// érthető validációs hibával utasíthassuk el, ne csendes alapértékkel.
 /// Az időtartam formátuma óó:pp:mm (pl. "01:05:30").
+/// A tervezett edzés azonosítója (UC08) csak rögzítéskor számít, módosításkor a kapcsolat nem változik.
 /// </summary>
 public record WorkoutRequest(
     DateOnly? Date,
@@ -15,7 +16,8 @@ public record WorkoutRequest(
     int? AvgHeartRate,
     int? ElevationGainM,
     int? Rpe,
-    string? Note);
+    string? Note,
+    Guid? PlannedWorkoutId = null);
 
 /// <summary>A validáció után már biztosan teljes, érvényes bemenet.</summary>
 public record ValidWorkoutInput(
@@ -26,7 +28,8 @@ public record ValidWorkoutInput(
     int? AvgHeartRate,
     int? ElevationGainM,
     int Rpe,
-    string? Note);
+    string? Note,
+    Guid? PlannedWorkoutId = null);
 
 /// <summary>Egy edzés a kliens felé, számított tempóval és terheléssel.</summary>
 public record WorkoutResponse(
@@ -43,10 +46,12 @@ public record WorkoutResponse(
     string? Note,
     double Load,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt)
+    DateTimeOffset UpdatedAt,
+    Guid? PlannedWorkoutId)
 {
     /// <summary>Válasz-DTO az entitásból; az időtartamot TimeSpan-ként (óó:pp:mm) adja vissza.</summary>
     public static WorkoutResponse From(Workout w) => new(
         w.Id, w.RunnerId, w.Date, w.Type, w.DistanceKm, TimeSpan.FromSeconds(w.DurationSeconds),
-        w.PaceSecondsPerKm, w.AvgHeartRate, w.ElevationGainM, w.Rpe, w.Note, w.Load, w.CreatedAt, w.UpdatedAt);
+        w.PaceSecondsPerKm, w.AvgHeartRate, w.ElevationGainM, w.Rpe, w.Note, w.Load, w.CreatedAt, w.UpdatedAt,
+        w.PlannedWorkoutId);
 }

@@ -54,6 +54,14 @@ public static class WorkoutEndpoints
         }
 
         var workout = await service.CreateAsync(user, input, ct);
+        if (workout is null)
+        {
+            return Results.ValidationProblem(new Dictionary<string, string[]>
+            {
+                ["plannedWorkoutId"] = ["A tervezett edzés nem található, vagy már teljesült."],
+            });
+        }
+
         return Results.Created($"/api/training/workouts/{workout.Id}", workout);
     }
 

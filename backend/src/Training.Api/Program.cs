@@ -4,6 +4,7 @@ using BuildingBlocks.Persistence;
 using Training.Api.CoachLinks;
 using Training.Api.Goals;
 using Training.Api.Persistence;
+using Training.Api.Plans;
 using Training.Api.Workouts;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,12 +17,15 @@ builder.Services.AddMessaging<TrainingDbContext>(builder.Configuration, "trainin
 });
 builder.Services.AddScoped<IWorkoutService, WorkoutService>();
 builder.Services.AddScoped<IGoalService, GoalService>();
+builder.Services.AddScoped<IPlanService, PlanService>();
+builder.Services.AddHostedService<MissedWorkoutJob>();
 
 var app = builder.Build();
 
 app.UseServiceDefaults();
 app.MapWorkoutEndpoints();
 app.MapGoalEndpoints();
+app.MapPlanEndpoints();
 
 await app.MigrateDatabaseAsync<TrainingDbContext>();
 await app.RunAsync();
