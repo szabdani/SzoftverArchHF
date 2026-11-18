@@ -63,13 +63,32 @@ public class WorkoutService(TrainingDbContext db, IPublishEndpoint publisher, Ti
 
     /// <summary>
     /// Új edzés rögzítése a bejelentkezett futó nevére, és WorkoutRecorded esemény küldése.
+    /// Ha tervezett edzéshez tartozik (UC08), az teljesítettre vált.
     /// </summary>
-    /// <returns>A mentett edzés.</returns>
-    public async Task<WorkoutResponse> CreateAsync(ClaimsPrincipal user, ValidWorkoutInput input, CancellationToken ct)
+    /// <returns>A mentett edzés, vagy null, ha a megadott tervezett edzés nem a futóé vagy már teljesült.</returns>
+    public async Task<WorkoutResponse?> CreateAsync(ClaimsPrincipal user, ValidWorkoutInput input, CancellationToken ct)
     {
+        var runnerId = user.GetUserId();
         var now = time.GetUtcNow();
-        var workout = Workout.Create(user.GetUserId(), input, now);
+        var workout = Workout.Create(runnerId, input, now);
         db.Workouts.Add(workout);
+
+        if (input.PlannedWorkoutId is { } plannedWorkoutId)
+        {
+            // Csak a futó saját, még nem teljesült tervezett edzése kapcsolható (a kihagyott is pótolható).
+            var plannedWorkout = await db.PlannedWorkouts.FirstOrDefaultAsync(planned =>
+                planned.Id == plannedWorkoutId
+                && planned.RunnerId == runnerId
+                && planned.Status != PlannedWorkoutStatus.Completed, ct);
+
+            if (plannedWorkout is null)
+            {
+                return null;
+            }
+
+            plannedWorkout.Complete(workout.Id);
+            await publisher.Publish(new PlannedWorkoutChanged(plannedWorkout.ToSnapshot(), now), ct);
+        }
 
         await publisher.Publish(new WorkoutRecorded(workout.ToSnapshot(), now), ct);
         await db.SaveChangesAsync(ct);
@@ -101,7 +120,8 @@ public class WorkoutService(TrainingDbContext db, IPublishEndpoint publisher, Ti
     }
 
     /// <summary>
-    /// A futó saját edzésének törlése, és WorkoutDeleted esemény küldése.
+    /// A futó saját edzésének törlése, és WorkoutDeleted esemény küldése. Ha tervezett edzést
+    /// teljesített, az újra tervezett lesz.
     /// </summary>
     /// <returns>true, ha törölte; false, ha nincs ilyen saját edzés.</returns>
     public async Task<bool> DeleteAsync(ClaimsPrincipal user, Guid id, CancellationToken ct)
@@ -113,11 +133,22 @@ public class WorkoutService(TrainingDbContext db, IPublishEndpoint publisher, Ti
             return false;
         }
 
+        var now = time.GetUtcNow();
+        if (workout.PlannedWorkoutId is { } plannedWorkoutId)
+        {
+            // A terv azóta törölve lehet, ezért a tervezett edzés hiánya nem hiba.
+            var plannedWorkout = await db.PlannedWorkouts.FirstOrDefaultAsync(planned => planned.Id == plannedWorkoutId, ct);
+            if (plannedWorkout is not null)
+            {
+                plannedWorkout.Reopen();
+                await publisher.Publish(new PlannedWorkoutChanged(plannedWorkout.ToSnapshot(), now), ct);
+            }
+        }
+
         db.Workouts.Remove(workout);
-        await publisher.Publish(new WorkoutDeleted(workout.Id, workout.RunnerId, workout.Date, time.GetUtcNow()), ct);
+        await publisher.Publish(new WorkoutDeleted(workout.Id, workout.RunnerId, workout.Date, now), ct);
         await db.SaveChangesAsync(ct);
 
         return true;
     }
-
 }

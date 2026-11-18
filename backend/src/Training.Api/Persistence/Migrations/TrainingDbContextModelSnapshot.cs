@@ -314,6 +314,117 @@ namespace Training.Api.Persistence.Migrations
                     b.ToTable("goals", (string)null);
                 });
 
+            modelBuilder.Entity("Training.Api.Plans.PlannedWorkout", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date")
+                        .HasColumnName("date");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("note");
+
+                    b.Property<Guid>("PlanId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("plan_id");
+
+                    b.Property<decimal?>("PlannedDistanceKm")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)")
+                        .HasColumnName("planned_distance_km");
+
+                    b.Property<int?>("PlannedDurationSeconds")
+                        .HasColumnType("integer")
+                        .HasColumnName("planned_duration_seconds");
+
+                    b.Property<Guid>("RunnerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("runner_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("status");
+
+                    b.Property<int>("TargetRpe")
+                        .HasColumnType("integer")
+                        .HasColumnName("target_rpe");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("type");
+
+                    b.Property<Guid?>("WorkoutId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("workout_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_planned_workouts");
+
+                    b.HasIndex("PlanId")
+                        .HasDatabaseName("ix_planned_workouts_plan_id");
+
+                    b.HasIndex("RunnerId", "Date")
+                        .HasDatabaseName("ix_planned_workouts_runner_id_date");
+
+                    b.ToTable("planned_workouts", (string)null);
+                });
+
+            modelBuilder.Entity("Training.Api.Plans.TrainingPlan", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("end_date");
+
+                    b.Property<Guid?>("GoalId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("goal_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("RunnerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("runner_id");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("start_date");
+
+                    b.HasKey("Id")
+                        .HasName("pk_training_plans");
+
+                    b.HasIndex("RunnerId")
+                        .HasDatabaseName("ix_training_plans_runner_id");
+
+                    b.ToTable("training_plans", (string)null);
+                });
+
             modelBuilder.Entity("Training.Api.Workouts.Workout", b =>
                 {
                     b.Property<Guid>("Id")
@@ -355,6 +466,10 @@ namespace Training.Api.Persistence.Migrations
                         .HasColumnType("character varying(500)")
                         .HasColumnName("note");
 
+                    b.Property<Guid?>("PlannedWorkoutId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("planned_workout_id");
+
                     b.Property<int>("Rpe")
                         .HasColumnType("integer")
                         .HasColumnName("rpe");
@@ -394,6 +509,21 @@ namespace Training.Api.Persistence.Migrations
                         .HasForeignKey("InboxMessageId", "InboxConsumerId")
                         .HasPrincipalKey("MessageId", "ConsumerId")
                         .HasConstraintName("fk_outbox_message_inbox_state_inbox_message_id_inbox_consumer_");
+                });
+
+            modelBuilder.Entity("Training.Api.Plans.PlannedWorkout", b =>
+                {
+                    b.HasOne("Training.Api.Plans.TrainingPlan", null)
+                        .WithMany("Workouts")
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_planned_workouts_training_plans_plan_id");
+                });
+
+            modelBuilder.Entity("Training.Api.Plans.TrainingPlan", b =>
+                {
+                    b.Navigation("Workouts");
                 });
 #pragma warning restore 612, 618
         }

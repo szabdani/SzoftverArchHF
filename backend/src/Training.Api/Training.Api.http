@@ -104,3 +104,71 @@ Authorization: Bearer {{token}}
 ### Összes cél (az aktív elöl)
 GET {{gateway}}/api/training/goals
 Authorization: Bearer {{token}}
+
+### Edzésterv a futónak (az edző "runnerId"-vel adja meg a futót), az aktív célhoz kötve
+# @name plan
+POST {{gateway}}/api/training/plans
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Félmaratoni felkészülés",
+  "startDate": "2026-11-23",
+  "endDate": "2027-04-12",
+  "linkActiveGoal": true
+}
+
+###
+@planId = {{plan.response.body.$.id}}
+
+### Tervezett edzés a tervbe (táv vagy időtartam közül legalább az egyik kell)
+# @name planned
+POST {{gateway}}/api/training/plans/{{planId}}/workouts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "date": "2026-11-25",
+  "type": "interval",
+  "plannedDuration": "00:50:00",
+  "targetRpe": 8,
+  "note": "6×800 m"
+}
+
+###
+@plannedId = {{planned.response.body.$.id}}
+
+### Áthelyezés másik napra (drag & drop)
+PUT {{gateway}}/api/training/plans/{{planId}}/workouts/{{plannedId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "date": "2026-11-26",
+  "type": "interval",
+  "plannedDuration": "00:50:00",
+  "targetRpe": 8,
+  "note": "6×800 m"
+}
+
+### Naptár: tervezett edzések egy időszakban (a teljesítetteket a /workouts adja)
+GET {{gateway}}/api/training/planned-workouts?from=2026-11-23&to=2026-12-31
+Authorization: Bearer {{token}}
+
+### Terv a tervezett edzéseivel
+GET {{gateway}}/api/training/plans/{{planId}}
+Authorization: Bearer {{token}}
+
+### Tervezett edzés teljesítése: edzés rögzítése a tervezett edzéshez kötve (UC08)
+POST {{gateway}}/api/training/workouts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "date": "2026-11-26",
+  "type": "interval",
+  "distanceKm": 10,
+  "duration": "00:52:00",
+  "rpe": 8,
+  "plannedWorkoutId": "{{plannedId}}"
+}

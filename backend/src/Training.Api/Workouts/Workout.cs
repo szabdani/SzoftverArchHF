@@ -27,13 +27,22 @@ public class Workout
     public DateTimeOffset CreatedAt { get; private set; }
     public DateTimeOffset UpdatedAt { get; private set; }
 
+    /// <summary>A tervezett edzés, amit ez az edzés teljesített (UC08); csak rögzítéskor állítható.</summary>
+    public Guid? PlannedWorkoutId { get; private set; }
+
     /// <summary>Tempó másodperc/km-ben (időtartam / táv).</summary>
     public int PaceSecondsPerKm => CalculatePaceSecondsPerKm(DurationSeconds, DistanceKm);
 
     /// <summary>Új edzés a futó nevére; a terhelést (sRPE) a bemenetből számolja.</summary>
     public static Workout Create(Guid runnerId, ValidWorkoutInput input, DateTimeOffset now)
     {
-        var workout = new Workout { Id = Guid.CreateVersion7(now), RunnerId = runnerId, CreatedAt = now };
+        var workout = new Workout
+        {
+            Id = Guid.CreateVersion7(now),
+            RunnerId = runnerId,
+            CreatedAt = now,
+            PlannedWorkoutId = input.PlannedWorkoutId,
+        };
         workout.Apply(input, now);
         return workout;
     }

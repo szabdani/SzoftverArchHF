@@ -120,7 +120,8 @@ public static class WorkoutValidator
             request.AvgHeartRate,
             request.ElevationGainM,
             request.Rpe!.Value,
-            request.Note);
+            request.Note,
+            request.PlannedWorkoutId);
         return true;
     }
 }
