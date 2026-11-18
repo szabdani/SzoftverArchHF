@@ -17,6 +17,14 @@ grant_type=password&client_id=futoedzes-frontend&username=runner@futoedzes.local
 GET {{gateway}}/api/analytics/risk
 Authorization: Bearer {{token}}
 
+### Terhelési dashboard: heti összesítő, intenzitás, utolsó 12 hét (UC06)
+GET {{gateway}}/api/analytics/dashboard?period=week
+Authorization: Bearer {{token}}
+
+### Ugyanez havi összesítővel
+GET {{gateway}}/api/analytics/dashboard?period=month
+Authorization: Bearer {{token}}
+
 ### Ajánlott következő edzés: típus, RPE-tartomány, időtartam, indoklás (UC10)
 GET {{gateway}}/api/analytics/recommendation
 Authorization: Bearer {{token}}
@@ -33,6 +41,9 @@ Authorization: Bearer {{token}}
 ### Az első figyelmeztetés nyugtázása
 POST {{gateway}}/api/analytics/alerts/{{alerts.response.body.$[0].id}}/acknowledge
 Authorization: Bearer {{token}}
+
+### Edzői áttekintés: a hozzárendelt futók kockázat szerint (UC14, edző tokennel)
+# GET {{gateway}}/api/analytics/coach/runners
 
 ### Edzőként egy hozzárendelt futó pontszáma (edző tokennel)
 # GET {{gateway}}/api/analytics/risk?runnerId=<futó azonosító>
