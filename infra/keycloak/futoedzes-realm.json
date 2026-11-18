@@ -132,7 +132,8 @@
       ],
       "realmRoles": [
         "coach"
-      ]
+      ],
+      "id": "c0000000-0000-4000-8000-000000000001"
     },
     {
       "username": "runner@futoedzes.local",
@@ -182,6 +183,82 @@
           "view-realm"
         ]
       }
+    },
+    {
+      "id": "d0000000-0000-4000-8000-000000000001",
+      "username": "demo-steady@futoedzes.local",
+      "email": "demo-steady@futoedzes.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Egyenletes",
+      "lastName": "Építkező",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-futoedzes"
+      ]
+    },
+    {
+      "id": "d0000000-0000-4000-8000-000000000002",
+      "username": "demo-spike@futoedzes.local",
+      "email": "demo-spike@futoedzes.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Hirtelen",
+      "lastName": "Ugró",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-futoedzes"
+      ]
+    },
+    {
+      "id": "d0000000-0000-4000-8000-000000000003",
+      "username": "demo-skipper@futoedzes.local",
+      "email": "demo-skipper@futoedzes.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Gyakran",
+      "lastName": "Kihagyó",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-futoedzes"
+      ]
+    },
+    {
+      "id": "d0000000-0000-4000-8000-000000000004",
+      "username": "demo-intense@futoedzes.local",
+      "email": "demo-intense@futoedzes.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Túl",
+      "lastName": "Intenzív",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Demo1234",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-futoedzes"
+      ]
     }
   ]
 }

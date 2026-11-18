@@ -1,7 +1,9 @@
 using Analytics.Api.Persistence;
 using Analytics.Api.Risk;
+using Contracts.Demo;
 using Contracts.Training;
 using MassTransit;
+using Microsoft.EntityFrameworkCore;
 
 namespace Analytics.Api.ReadModels;
 
@@ -15,7 +17,8 @@ public class TrainingEventsConsumer(AnalyticsDbContext db, IRiskService riskServ
     IConsumer<WorkoutDeleted>,
     IConsumer<PlannedWorkoutChanged>,
     IConsumer<PlannedWorkoutRemoved>,
-    IConsumer<RunnerGoalChanged>
+    IConsumer<RunnerGoalChanged>,
+    IConsumer<RunnerDataReset>
 {
     /// <summary>
     /// Új edzés: felvétel a helyi másolatba, majd újraszámolás.
@@ -103,6 +106,23 @@ public class TrainingEventsConsumer(AnalyticsDbContext db, IRiskService riskServ
         record.DistanceKm = message.DistanceKm;
         record.TargetDate = message.TargetDate;
         await db.SaveChangesAsync(context.CancellationToken);
+    }
+
+    /// <summary>
+    /// A futó Training-adatai törlődtek (demó): minden róla tárolt adat törlődik, a figyelmeztetések és
+    /// a pontszámok is. Mivel ez a sor egyszerre egy üzenetet dolgoz fel, a törlés biztosan az utána
+    /// küldött új adatok előtt fut le.
+    /// </summary>
+    public async Task Consume(ConsumeContext<RunnerDataReset> context)
+    {
+        var runnerId = context.Message.RunnerId;
+        var ct = context.CancellationToken;
+
+        await db.Workouts.Where(workout => workout.RunnerId == runnerId).ExecuteDeleteAsync(ct);
+        await db.PlannedWorkouts.Where(plannedWorkout => plannedWorkout.RunnerId == runnerId).ExecuteDeleteAsync(ct);
+        await db.ActiveGoals.Where(goal => goal.RunnerId == runnerId).ExecuteDeleteAsync(ct);
+        await db.RiskScoreSnapshots.Where(snapshot => snapshot.RunnerId == runnerId).ExecuteDeleteAsync(ct);
+        await db.Alerts.Where(alert => alert.RunnerId == runnerId).ExecuteDeleteAsync(ct);
     }
 
     /// <summary>

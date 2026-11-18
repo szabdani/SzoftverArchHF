@@ -37,6 +37,17 @@ A `futoedzes` realm induláskor importálódik ([infra/keycloak/futoedzes-realm.
 
 Új regisztráció automatikusan `runner` szerepkört kap.
 
+### Demóadatok (UC18)
+
+Az admin a `POST /api/identity/admin/demo` hívással négy szimulált futót kapcsol a `coach@futoedzes.local` edzőhöz, és mindegyiknek 12 hét edzésadatot, edzéstervet és célt generál. A `DELETE` ugyanezen a címen törli őket. Mind a négy be is tud lépni (`Demo1234`):
+
+| Felhasználó | Minta |
+|---|---|
+| `demo-steady@futoedzes.local` | egyenletes építkezés |
+| `demo-spike@futoedzes.local` | hirtelen terhelésugrás (magas kockázat) |
+| `demo-skipper@futoedzes.local` | gyakori kihagyás |
+| `demo-intense@futoedzes.local` | túl sok intenzív nap |
+
 ### Token kérése (fejlesztéshez)
 
 ```bash
