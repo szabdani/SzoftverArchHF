@@ -13,6 +13,7 @@ builder.Services.AddMessaging<TrainingDbContext>(builder.Configuration, "trainin
 {
     bus.AddConsumer<CoachRunnerLinkConsumer>();
 });
+builder.Services.AddScoped<IWorkoutService, WorkoutService>();
 
 var app = builder.Build();
 
