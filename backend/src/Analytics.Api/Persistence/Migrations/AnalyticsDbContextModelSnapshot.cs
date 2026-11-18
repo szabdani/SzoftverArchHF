@@ -267,6 +267,66 @@ namespace Analytics.Api.Persistence.Migrations
                     b.ToTable("risk_score_snapshots", (string)null);
                 });
 
+            modelBuilder.Entity("Analytics.Api.Rules.RuleSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    b.Property<double>("AcwrCritical")
+                        .HasColumnType("double precision")
+                        .HasColumnName("acwr_critical");
+
+                    b.Property<double>("AcwrElevated")
+                        .HasColumnType("double precision")
+                        .HasColumnName("acwr_elevated");
+
+                    b.Property<bool>("AcwrEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("acwr_enabled");
+
+                    b.Property<bool>("IntenseDaysEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("intense_days_enabled");
+
+                    b.Property<int>("IntenseDaysPerWeek")
+                        .HasColumnType("integer")
+                        .HasColumnName("intense_days_per_week");
+
+                    b.Property<int>("IntenseRpe")
+                        .HasColumnType("integer")
+                        .HasColumnName("intense_rpe");
+
+                    b.Property<bool>("MissedWorkoutsEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("missed_workouts_enabled");
+
+                    b.Property<int>("MissedWorkoutsPerWeek")
+                        .HasColumnType("integer")
+                        .HasColumnName("missed_workouts_per_week");
+
+                    b.Property<bool>("NoRestDayEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("no_rest_day_enabled");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<bool>("WeeklyKmIncreaseEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("weekly_km_increase_enabled");
+
+                    b.Property<int>("WeeklyKmIncreasePercent")
+                        .HasColumnType("integer")
+                        .HasColumnName("weekly_km_increase_percent");
+
+                    b.HasKey("Id")
+                        .HasName("pk_rule_settings");
+
+                    b.ToTable("rule_settings", (string)null);
+                });
+
             modelBuilder.Entity("BuildingBlocks.CoachAccess.CoachRunnerLink", b =>
                 {
                     b.Property<Guid>("CoachId")

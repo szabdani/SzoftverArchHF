@@ -19,6 +19,12 @@ public interface IRiskService
     Task RecalculateAsync(Guid runnerId, CancellationToken ct);
 
     /// <summary>
+    /// Minden futónak újraszámolja a mai pontszámát (pl. a küszöbök módosítása után).
+    /// </summary>
+    /// <returns>Az újraszámolt futók száma.</returns>
+    Task<int> RecalculateAllAsync(CancellationToken ct);
+
+    /// <summary>
     /// A napi ellenőrzés része (UC19): minden futónak kiszámolja a mai pontszámát, akinek még nincs.
     /// </summary>
     /// <returns>Az újraszámolt futók száma.</returns>

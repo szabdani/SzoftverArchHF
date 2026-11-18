@@ -1,5 +1,6 @@
 using System.Globalization;
 using Analytics.Api.ReadModels;
+using Analytics.Api.Rules;
 
 namespace Analytics.Api.Risk;
 
@@ -31,16 +32,11 @@ public record RiskResult(
 
 /// <summary>
 /// Szabályalapú túlterhelési kockázati pontszám (spec 3.8). Determinisztikus, I/O nélküli számítás,
-/// ezért egységtesztekkel ellenőrizhető. A küszöbök a spec alapértelmezései.
+/// ezért egységtesztekkel ellenőrizhető. A küszöböket és a szabályok aktív állapotát a
+/// <see cref="RuleSettings"/> adja (UC17); a pontok a spec szerint rögzítettek.
 /// </summary>
 public static class RiskCalculator
 {
-    public const double AcwrCritical = 1.5;
-    public const double AcwrElevated = 1.3;
-    public const decimal WeeklyKmIncreaseLimit = 0.10m;
-    public const int IntenseRpe = 7;
-    public const int MissedWorkoutLimit = 2;
-
     public const int AcwrCriticalPoints = 40;
     public const int AcwrElevatedPoints = 20;
     public const int WeeklyKmIncreasePoints = 20;
@@ -58,9 +54,16 @@ public static class RiskCalculator
     /// <param name="missedLast7Days">A kihagyott tervezett edzések száma az utolsó 7 napban.</param>
     /// <param name="today">A nap, amire számolunk (a felhasználó időzónájában).</param>
     /// <param name="firstWorkoutDate">A futó legelső edzésének napja; ebből tudjuk, van-e már 28 napnyi adat.</param>
+    /// <param name="settings">Küszöbök és aktív szabályok; ha nincs megadva, a spec alapértelmezései.</param>
     public static RiskResult Calculate(
-        IReadOnlyCollection<WorkoutRecord> workouts, int missedLast7Days, DateOnly today, DateOnly? firstWorkoutDate)
+        IReadOnlyCollection<WorkoutRecord> workouts,
+        int missedLast7Days,
+        DateOnly today,
+        DateOnly? firstWorkoutDate,
+        RuleSettings? settings = null)
     {
+        settings ??= new RuleSettings();
+
         // Ablakok, mindkét végükön inkluzívak: utolsó 7 nap [ma−6, ma], előző 7 nap [ma−13, ma−7],
         // utolsó 28 nap [ma−27, ma].
         var last7Start = today.AddDays(-6);
@@ -88,19 +91,19 @@ public static class RiskCalculator
         var reasons = new List<string>();
 
         // Az ACWR két szabálya kizárja egymást: a magasabb sáv ér többet.
-        if (acwr > AcwrCritical)
+        if (settings.AcwrEnabled && acwr > settings.AcwrCritical)
         {
             score += AcwrCriticalPoints;
-            reasons.Add($"ACWR {Format(acwr.Value)} > 1,5");
+            reasons.Add($"ACWR {Format(acwr.Value)} > {FormatThreshold(settings.AcwrCritical)}");
         }
-        else if (acwr >= AcwrElevated)
+        else if (settings.AcwrEnabled && acwr >= settings.AcwrElevated)
         {
             score += AcwrElevatedPoints;
-            reasons.Add($"ACWR {Format(acwr.Value)} az 1,3–1,5 sávban");
+            reasons.Add($"ACWR {Format(acwr.Value)} {ElevatedBand(settings)}");
         }
 
         // Az előző hét nulla távjához képest nincs értelmezhető százalékos növekedés.
-        if (previousWeeklyKm > 0 && weeklyKm > previousWeeklyKm * (1 + WeeklyKmIncreaseLimit))
+        if (settings.WeeklyKmIncreaseEnabled && IsWeeklyKmIncrease(weeklyKm, previousWeeklyKm, settings))
         {
             score += WeeklyKmIncreasePoints;
             var increasePercent = (weeklyKm / previousWeeklyKm - 1) * 100;
@@ -108,23 +111,23 @@ public static class RiskCalculator
         }
 
         // Intenzív nap: legalább egy RPE ≥ 7 edzés. Keressük az első olyan napot, amit egy intenzív nap követ.
-        var intenseDays = last7.Where(w => w.Rpe >= IntenseRpe).Select(w => w.Date).ToHashSet();
+        var intenseDays = last7.Where(w => w.Rpe >= settings.IntenseRpe).Select(w => w.Date).ToHashSet();
         var firstOfPair = intenseDays.Order().Where(day => intenseDays.Contains(day.AddDays(1))).Select(day => (DateOnly?)day).FirstOrDefault();
-        if (firstOfPair is { } day)
+        if (settings.IntenseDaysEnabled && firstOfPair is { } day)
         {
             score += ConsecutiveIntenseDaysPoints;
-            reasons.Add($"Két egymást követő intenzív nap (RPE ≥ 7): {day.ToString("MM.dd.", Hungarian)} és {day.AddDays(1).ToString("MM.dd.", Hungarian)}");
+            reasons.Add($"Két egymást követő intenzív nap (RPE ≥ {settings.IntenseRpe}): {day.ToString("MM.dd.", Hungarian)} és {day.AddDays(1).ToString("MM.dd.", Hungarian)}");
         }
 
         // Pihenőnap hiánya: az utolsó 7 nap mindegyikén volt edzés.
         var noRestDay = last7.Select(w => w.Date).Distinct().Count() == 7;
-        if (noRestDay)
+        if (settings.NoRestDayEnabled && noRestDay)
         {
             score += NoRestDayPoints;
             reasons.Add("7 egymást követő edzésnap, nincs pihenőnap");
         }
 
-        if (missedLast7Days >= MissedWorkoutLimit)
+        if (settings.MissedWorkoutsEnabled && missedLast7Days >= settings.MissedWorkoutsPerWeek)
         {
             score += MissedWorkoutsPoints;
             reasons.Add($"{missedLast7Days} kihagyott tervezett edzés az utolsó 7 napban");
@@ -145,6 +148,29 @@ public static class RiskCalculator
         < 60 => RiskCategory.Medium,
         _ => RiskCategory.High,
     };
+
+    /// <summary>
+    /// A heti táv a beállított százaléknál jobban nőtt-e az előző héthez képest (nulla előző hétnél nem).
+    /// </summary>
+    public static bool IsWeeklyKmIncrease(decimal weeklyKm, decimal previousWeeklyKm, RuleSettings settings) =>
+        previousWeeklyKm > 0 && weeklyKm > previousWeeklyKm * (1 + settings.WeeklyKmIncreasePercent / 100m);
+
+    /// <summary>
+    /// Az emelkedő ACWR-sáv szövege a helyes névelővel, pl. „az 1,3–1,5 sávban”.
+    /// </summary>
+    public static string ElevatedBand(RuleSettings settings)
+    {
+        var from = FormatThreshold(settings.AcwrElevated);
+
+        // „az” a magánhangzóval kiejtett számok előtt (egy, öt), egyébként „a”.
+        var article = from[0] is '1' or '5' ? "az" : "a";
+        return $"{article} {from}–{FormatThreshold(settings.AcwrCritical)} sávban";
+    }
+
+    /// <summary>
+    /// Küszöb magyar formában, felesleges nullák nélkül (pl. 1,5).
+    /// </summary>
+    public static string FormatThreshold(double value) => value.ToString("0.0#", Hungarian);
 
     /// <summary>
     /// Szám magyar formában, két tizedessel (pl. 1,62).

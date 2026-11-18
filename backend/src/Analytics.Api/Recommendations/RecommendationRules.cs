@@ -22,6 +22,9 @@ public record Recommendation(
 /// </summary>
 public static class RecommendationRules
 {
+    /// <summary>Intenzív az a nap, amelyen legalább ilyen RPE-jű edzés volt (spec 3.7, rögzített).</summary>
+    public const int IntenseRpe = 7;
+
     /// <summary>Közepes kockázatnál a tervezett edzés ennyiszeresére rövidül.</summary>
     public const decimal MediumRiskShortening = 0.8m;
 
@@ -54,7 +57,7 @@ public static class RecommendationRules
 
         // 2. Ha tegnap intenzív nap volt (RPE ≥ 7), ma könnyű futás.
         var yesterday = today.AddDays(-1);
-        if (recentWorkouts.Any(w => w.Date == yesterday && w.Rpe >= RiskCalculator.IntenseRpe))
+        if (recentWorkouts.Any(w => w.Date == yesterday && w.Rpe >= IntenseRpe))
         {
             return new(WorkoutType.Easy, 3, 4, 40, null,
                 "Tegnap intenzív edzés volt (RPE ≥ 7), ezért ma könnyű futás javasolt.");
@@ -68,7 +71,7 @@ public static class RecommendationRules
 
         // 4. Ha az utolsó intenzív nap legalább két napja volt és alacsony a kockázat, minőségi edzés.
         var lastIntenseDay = recentWorkouts
-            .Where(w => w.Rpe >= RiskCalculator.IntenseRpe)
+            .Where(w => w.Rpe >= IntenseRpe)
             .Select(w => (DateOnly?)w.Date)
             .Max();
         var riskIsLow = riskCategory is null or RiskCategory.Low;
