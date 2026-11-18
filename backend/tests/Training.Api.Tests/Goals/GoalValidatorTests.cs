@@ -45,7 +45,7 @@ public class GoalValidatorTests
     }
 
     /// <summary>
-    /// Egyéni célnál kötelező a táv, és 0,1–500 km közötti, legfeljebb két tizedes lehet.
+    /// Egyéni célnál kötelező a táv, és 0,1–500 km közötti (a több tizedesjegy kerekítődik).
     /// </summary>
     [Theory]
     [InlineData(null, false)]
@@ -53,7 +53,7 @@ public class GoalValidatorTests
     [InlineData(0.1, true)]
     [InlineData(500.0, true)]
     [InlineData(500.01, false)]
-    [InlineData(12.345, false)]
+    [InlineData(12.345, true)]
     public void CustomGoal_DistanceRules(double? distanceKm, bool expectedValid)
     {
         var request = new GoalRequest(GoalType.Custom, (decimal?)distanceKm, Today.AddDays(30), null);
@@ -76,14 +76,14 @@ public class GoalValidatorTests
     }
 
     /// <summary>
-    /// A célidő opcionális, 1 perc és 24 óra között, egész másodpercre.
+    /// A célidő opcionális, 1 perc és 23:59:59 között, egész másodpercre (egy nap már nem óó:pp:mm).
     /// </summary>
     [Theory]
     [InlineData(null, true)]
     [InlineData(59.0, false)]
     [InlineData(60.0, true)]
-    [InlineData(86_400.0, true)]
-    [InlineData(86_401.0, false)]
+    [InlineData(86_399.0, true)]
+    [InlineData(86_400.0, false)]
     [InlineData(90.5, false)]
     public void TargetTime_Rules(double? seconds, bool expectedValid)
     {

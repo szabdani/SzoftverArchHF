@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using BuildingBlocks.Auth;
+using BuildingBlocks.Validation;
 
 namespace Identity.Api.Admin;
 
@@ -34,9 +35,10 @@ public static class AdminUserEndpoints
     private static async Task<IResult> SetRoleAsync(
         Guid id, SetRoleRequest request, ClaimsPrincipal user, IAdminUserService service, CancellationToken ct)
     {
-        if (request.Role is not { } role || !AdminUserService.AppRoles.Contains(role))
+        var errors = RequestValidation.ValidateAnnotations(request);
+        if (errors.Count > 0)
         {
-            return Results.ValidationProblem(new Dictionary<string, string[]> { ["role"] = ["Érvényes értékek: runner, coach, admin."] });
+            return Results.ValidationProblem(errors);
         }
 
         // Így az utolsó adminisztrátor sem veheti el véletlenül a saját jogát.
@@ -45,7 +47,7 @@ public static class AdminUserEndpoints
             return Results.ValidationProblem(new Dictionary<string, string[]> { ["id"] = ["A saját szerepkörödet nem módosíthatod."] });
         }
 
-        return await service.SetRoleAsync(id, role, ct) ? Results.NoContent() : Results.NotFound();
+        return await service.SetRoleAsync(id, request.Role!, ct) ? Results.NoContent() : Results.NotFound();
     }
 
     /// <summary>

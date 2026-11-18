@@ -1,0 +1,275 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Analytics.Api | v1",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/analytics/risk": {
+      "get": {
+        "tags": [
+          "RiskEndpoints"
+        ],
+        "parameters": [
+          {
+            "name": "runnerId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/analytics/recommendation": {
+      "get": {
+        "tags": [
+          "RecommendationEndpoints"
+        ],
+        "parameters": [
+          {
+            "name": "runnerId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/analytics/dashboard": {
+      "get": {
+        "tags": [
+          "DashboardEndpoints"
+        ],
+        "parameters": [
+          {
+            "name": "runnerId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/analytics/coach/runners": {
+      "get": {
+        "tags": [
+          "DashboardEndpoints"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/analytics/alerts": {
+      "get": {
+        "tags": [
+          "AlertEndpoints"
+        ],
+        "parameters": [
+          {
+            "name": "runnerId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "includeAcknowledged",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/analytics/alerts/{id}/acknowledge": {
+      "post": {
+        "tags": [
+          "AlertEndpoints"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/analytics/admin/rules": {
+      "get": {
+        "tags": [
+          "RuleSettingsEndpoints"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "RuleSettingsEndpoints"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RuleSettingsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "RuleSettingsDto": {
+        "required": [
+          "acwrCritical",
+          "acwrElevated",
+          "weeklyKmIncreasePercent",
+          "intenseRpe",
+          "intenseDaysPerWeek",
+          "missedWorkoutsPerWeek",
+          "acwrEnabled",
+          "weeklyKmIncreaseEnabled",
+          "intenseDaysEnabled",
+          "noRestDayEnabled",
+          "missedWorkoutsEnabled"
+        ],
+        "type": "object",
+        "properties": {
+          "acwrCritical": {
+            "maximum": 5,
+            "minimum": 0.5,
+            "type": "number",
+            "format": "double"
+          },
+          "acwrElevated": {
+            "maximum": 5,
+            "minimum": 0.5,
+            "type": "number",
+            "format": "double"
+          },
+          "weeklyKmIncreasePercent": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          },
+          "intenseRpe": {
+            "maximum": 10,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          },
+          "intenseDaysPerWeek": {
+            "maximum": 7,
+            "minimum": 2,
+            "type": "integer",
+            "format": "int32"
+          },
+          "missedWorkoutsPerWeek": {
+            "maximum": 7,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          },
+          "acwrEnabled": {
+            "type": "boolean"
+          },
+          "weeklyKmIncreaseEnabled": {
+            "type": "boolean"
+          },
+          "intenseDaysEnabled": {
+            "type": "boolean"
+          },
+          "noRestDayEnabled": {
+            "type": "boolean"
+          },
+          "missedWorkoutsEnabled": {
+            "type": "boolean"
+          },
+          "updatedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "RiskEndpoints"
+    },
+    {
+      "name": "RecommendationEndpoints"
+    },
+    {
+      "name": "DashboardEndpoints"
+    },
+    {
+      "name": "AlertEndpoints"
+    },
+    {
+      "name": "RuleSettingsEndpoints"
+    }
+  ]
+}

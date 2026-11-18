@@ -1,0 +1,711 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "Training.Api | v1",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/training/planned-workouts": {
+      "get": {
+        "tags": [
+          "PlanEndpoints"
+        ],
+        "parameters": [
+          {
+            "name": "runnerId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training/workouts": {
+      "get": {
+        "tags": [
+          "WorkoutEndpoints"
+        ],
+        "parameters": [
+          {
+            "name": "runnerId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "WorkoutEndpoints"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkoutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training/workouts/{id}": {
+      "get": {
+        "tags": [
+          "WorkoutEndpoints"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "WorkoutEndpoints"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkoutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "WorkoutEndpoints"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training/goals": {
+      "get": {
+        "tags": [
+          "GoalEndpoints"
+        ],
+        "parameters": [
+          {
+            "name": "runnerId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "GoalEndpoints"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training/goals/active": {
+      "get": {
+        "tags": [
+          "GoalEndpoints"
+        ],
+        "parameters": [
+          {
+            "name": "runnerId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training/goals/{id}": {
+      "put": {
+        "tags": [
+          "GoalEndpoints"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoalRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training/plans": {
+      "get": {
+        "tags": [
+          "PlanEndpoints"
+        ],
+        "parameters": [
+          {
+            "name": "runnerId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "PlanEndpoints"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training/plans/{id}": {
+      "get": {
+        "tags": [
+          "PlanEndpoints"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "PlanEndpoints"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "PlanEndpoints"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training/plans/{planId}/workouts": {
+      "post": {
+        "tags": [
+          "PlanEndpoints"
+        ],
+        "parameters": [
+          {
+            "name": "planId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlannedWorkoutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/training/plans/{planId}/workouts/{id}": {
+      "put": {
+        "tags": [
+          "PlanEndpoints"
+        ],
+        "parameters": [
+          {
+            "name": "planId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlannedWorkoutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "PlanEndpoints"
+        ],
+        "parameters": [
+          {
+            "name": "planId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "GoalRequest": {
+        "required": [
+          "type",
+          "targetDate"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/GoalType"
+          },
+          "distanceKm": {
+            "maximum": 500,
+            "minimum": 0.1,
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "targetDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "targetTime": {
+            "pattern": "^(?:00:(?:0[1-9]|[1-5][0-9]):[0-5][0-9]|(?:0[1-9]|1[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9])$",
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "GoalType": {
+        "enum": [
+          "fiveK",
+          "tenK",
+          "halfMarathon",
+          "marathon",
+          "custom"
+        ]
+      },
+      "PlannedWorkoutRequest": {
+        "required": [
+          "date",
+          "type",
+          "targetRpe"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "type": {
+            "$ref": "#/components/schemas/WorkoutType"
+          },
+          "plannedDistanceKm": {
+            "maximum": 100,
+            "minimum": 0.1,
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "plannedDuration": {
+            "pattern": "^(?:00:(?:0[1-9]|[1-5][0-9]):[0-5][0-9]|0[1-9]:[0-5][0-9]:[0-5][0-9]|10:00:00)$",
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "targetRpe": {
+            "maximum": 10,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          },
+          "note": {
+            "maxLength": 500,
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "PlanRequest": {
+        "required": [
+          "name",
+          "startDate",
+          "endDate",
+          "linkActiveGoal"
+        ],
+        "type": "object",
+        "properties": {
+          "runnerId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "name": {
+            "maxLength": 100,
+            "type": "string"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "linkActiveGoal": {
+            "type": "boolean"
+          }
+        }
+      },
+      "WorkoutRequest": {
+        "required": [
+          "date",
+          "type",
+          "distanceKm",
+          "duration",
+          "rpe"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "type": {
+            "$ref": "#/components/schemas/WorkoutType"
+          },
+          "distanceKm": {
+            "maximum": 100,
+            "minimum": 0.1,
+            "type": "number",
+            "format": "double"
+          },
+          "duration": {
+            "pattern": "^(?:00:(?:0[1-9]|[1-5][0-9]):[0-5][0-9]|0[1-9]:[0-5][0-9]:[0-5][0-9]|10:00:00)$",
+            "type": "string"
+          },
+          "avgHeartRate": {
+            "maximum": 220,
+            "minimum": 40,
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "elevationGainM": {
+            "maximum": 5000,
+            "minimum": 0,
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "rpe": {
+            "maximum": 10,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          },
+          "note": {
+            "maxLength": 500,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "plannedWorkoutId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "WorkoutType": {
+        "enum": [
+          "easy",
+          "recovery",
+          "tempo",
+          "interval",
+          "long",
+          "race"
+        ]
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "PlanEndpoints"
+    },
+    {
+      "name": "WorkoutEndpoints"
+    },
+    {
+      "name": "GoalEndpoints"
+    }
+  ]
+}

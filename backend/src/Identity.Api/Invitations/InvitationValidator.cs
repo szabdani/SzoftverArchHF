@@ -1,9 +1,11 @@
 using System.Net.Mail;
+using BuildingBlocks.Validation;
 
 namespace Identity.Api.Invitations;
 
 /// <summary>
-/// A meghívás kérésének ellenőrzése. A hibakulcsok a JSON mezőnevek (camelCase).
+/// A meghívás kérésének ellenőrzése. A mezőszabályok az <see cref="InvitationRequest"/> attribútumaiban
+/// vannak (közös séma a frontenddel); itt csak a szerveroldali szabályok vannak.
 /// </summary>
 public static class InvitationValidator
 {
@@ -19,22 +21,17 @@ public static class InvitationValidator
         out Dictionary<string, string[]> errors)
     {
         runnerEmail = NormalizeEmail(request.Email);
-        errors = new Dictionary<string, string[]>();
+        errors = RequestValidation.ValidateAnnotations(request);
 
-        if (runnerEmail.Length == 0)
+        // Szerveroldali szabályok: puszta cím kell (a "Név <cím>" alakot az attribútum még elfogadná),
+        // és az edző saját magát nem hívhatja meg.
+        if (!MailAddress.TryCreate(runnerEmail, out var address) || address.Address != runnerEmail)
         {
-            errors["email"] = ["Az e-mail cím megadása kötelező."];
-        }
-        else if (runnerEmail.Length > Invitation.EmailMaxLength
-            || !MailAddress.TryCreate(runnerEmail, out var address)
-            || address.Address != runnerEmail)
-        {
-            // A MailAddress a "Név <cím>" alakot is elfogadná, ezért a puszta címet várjuk el.
-            errors["email"] = ["Érvénytelen e-mail cím."];
+            errors.TryAdd("email", ["Érvénytelen e-mail cím."]);
         }
         else if (runnerEmail == NormalizeEmail(coachEmail))
         {
-            errors["email"] = ["Saját magadat nem hívhatod meg."];
+            errors.TryAdd("email", ["Saját magadat nem hívhatod meg."]);
         }
 
         return errors.Count == 0;

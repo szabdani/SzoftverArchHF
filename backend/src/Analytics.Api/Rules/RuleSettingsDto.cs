@@ -1,14 +1,23 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Analytics.Api.Rules;
 
 /// <summary>
-/// A szabálybeállítások a kliens felé és vissza (lekérdezés és teljes felülírás).
+/// A szabálybeállítások a kliens felé és vissza (lekérdezés és teljes felülírás). A tartományok az
+/// attribútumokban vannak (közös séma a frontenddel).
 /// </summary>
 public record RuleSettingsDto(
+    [property: Range(0.5, 5, ErrorMessage = "A kritikus ACWR 0,5 és 5 között lehet.")]
     double AcwrCritical,
+    [property: Range(0.5, 5, ErrorMessage = "Az emelkedő ACWR 0,5 és 5 között lehet.")]
     double AcwrElevated,
+    [property: Range(1, 100, ErrorMessage = "A heti km-növekedés küszöbe 1 és 100% között lehet.")]
     int WeeklyKmIncreasePercent,
+    [property: Range(1, 10, ErrorMessage = "Az intenzív RPE 1 és 10 között lehet.")]
     int IntenseRpe,
+    [property: Range(2, 7, ErrorMessage = "A heti intenzív napok küszöbe 2 és 7 között lehet.")]
     int IntenseDaysPerWeek,
+    [property: Range(1, 7, ErrorMessage = "A heti kihagyott edzések küszöbe 1 és 7 között lehet.")]
     int MissedWorkoutsPerWeek,
     bool AcwrEnabled,
     bool WeeklyKmIncreaseEnabled,

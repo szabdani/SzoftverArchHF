@@ -1,3 +1,4 @@
+using System.Reflection;
 using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -39,6 +40,12 @@ public static class PersistenceExtensions
     public static async Task MigrateDatabaseAsync<TDbContext>(this WebApplication app)
         where TDbContext : DbContext
     {
+        // Build-idejű OpenAPI exportnál a program az indulásig fut, adatbázis nélkül: ilyenkor nincs migráció.
+        if (Assembly.GetEntryAssembly()?.GetName().Name == "GetDocument.Insider")
+        {
+            return;
+        }
+
         await using var scope = app.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<TDbContext>();
         await db.Database.MigrateAsync();

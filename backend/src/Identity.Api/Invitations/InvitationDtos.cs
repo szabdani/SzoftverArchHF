@@ -1,9 +1,16 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Identity.Api.Invitations;
 
 /// <summary>
-/// Meghívás kérése: a meghívandó futó e-mail címe.
+/// Meghívás kérése: a meghívandó futó e-mail címe. A mezőszabályok az attribútumokban vannak (közös
+/// séma a frontenddel).
 /// </summary>
-public record InvitationRequest(string? Email);
+public record InvitationRequest(
+    [property: Required(ErrorMessage = "Az e-mail cím megadása kötelező.")]
+    [property: EmailAddress(ErrorMessage = "Érvénytelen e-mail cím.")]
+    [property: MaxLength(Invitation.EmailMaxLength, ErrorMessage = "Az e-mail cím túl hosszú.")]
+    string? Email);
 
 /// <summary>
 /// Egy meghívás vagy élő kapcsolat a kliens felé.

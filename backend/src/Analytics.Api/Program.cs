@@ -30,7 +30,7 @@ builder.Services.AddHostedService<DailyRiskJob>();
 
 var app = builder.Build();
 
-app.UseServiceDefaults();
+app.UseServiceDefaults("analytics");
 app.MapRiskEndpoints();
 app.MapAlertEndpoints();
 app.MapRecommendationEndpoints();

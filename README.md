@@ -58,6 +58,33 @@ curl -s http://localhost/auth/realms/futoedzes/protocol/openid-connect/token \
 
 A backend szolgáltatások `.http` fájljai is ezt használják.
 
+## Közös validációs séma (kliens és szerver)
+
+A kérések mezőnkénti szabályai (kötelező, min/max, max. hossz, minták, felsorolások) a backend kérés-DTO-in vannak attribútumként, magyar hibaüzenettel. A szerver ezekkel validál, és ugyanezek kerülnek az OpenAPI leírásba. A frontend ebből generálja a saját sémáját (pl. zod), így a kliens és a szerver ugyanazzal a sémával validál.
+
+- **Sémafájlok** (OpenAPI 3.1): [docs/openapi/](docs/openapi/): `Training.Api.json`, `Identity.Api.json`, `Analytics.Api.json`
+- **Frissítés** a backend módosítása után (futó backend nem kell hozzá):
+  ```bash
+  dotnet build backend/FutoedzesTervezo.slnx -p:OpenApiGenerateDocuments=true
+  ```
+- **Futó rendszeren**: `http://localhost/api/{training|identity|analytics}/openapi/v1.json`
+- **Frontend**: egy OpenAPI 3.1-et ismerő generátorral, pl. `@hey-api/openapi-ts` zod pluginnal.
+
+A szerver hibaválasza `400 ValidationProblem`, a hibák mezőnként a JSON mezőnevekkel (pl. `errors.distanceKm`). A táv két tizedesre kerekítődik, a szám mezők csak JSON számot fogadnak el.
+
+### Csak szerveroldali szabályok
+
+Ezek a mai naptól, több mezőtől vagy az adatbázistól függnek, ezért nincsenek a sémában. A frontend ugyanilyen mezőhibaként kapja vissza őket.
+
+| Kérés | Szabály |
+|---|---|
+| Edzés | a dátum nem lehet jövőbeli |
+| Cél | a céldátum nem lehet múltbeli; egyéni célnál kötelező a táv |
+| Terv | a záródátum nem korábbi a kezdőnél, legfeljebb egy év |
+| Tervezett edzés | a dátum a terv időszakába esik; tervezett táv vagy időtartam közül legalább az egyik kell |
+| Meghívás | puszta e-mail cím (nem „Név &lt;cím&gt;”); saját magát nem hívhatja meg az edző |
+| Szabálybeállítások | az emelkedő ACWR küszöb kisebb a kritikusnál |
+
 ## Backend fejlesztés
 
 ```bash

@@ -20,7 +20,7 @@ builder.Services.AddScoped<IDemoService, DemoService>();
 
 var app = builder.Build();
 
-app.UseServiceDefaults();
+app.UseServiceDefaults("identity");
 app.MapInvitationEndpoints();
 app.MapAdminUserEndpoints();
 app.MapDemoEndpoints();

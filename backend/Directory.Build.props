@@ -4,5 +4,11 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
+    <!--
+      Az API-k OpenAPI leírása (benne a validációs szabályokkal) a frontend sémáinak forrása.
+      Exportálás: dotnet build backend/FutoedzesTervezo.slnx -p:OpenApiGenerateDocuments=true
+    -->
+    <OpenApiGenerateDocuments>false</OpenApiGenerateDocuments>
+    <OpenApiDocumentsDirectory>$(MSBuildThisFileDirectory)../docs/openapi</OpenApiDocumentsDirectory>
   </PropertyGroup>
 </Project>
