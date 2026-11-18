@@ -1,0 +1,21 @@
+# Analytics API kipróbálása a docker compose-zal futó rendszeren (http://localhost).
+# A pontszám a Training eseményeiből számolódik: rögzíts előbb edzéseket (Training.Api.http).
+
+@gateway = http://localhost
+
+### Futó token (runner@futoedzes.local / Demo1234)
+# @name login
+POST {{gateway}}/auth/realms/futoedzes/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id=futoedzes-frontend&username=runner@futoedzes.local&password=Demo1234
+
+###
+@token = {{login.response.body.$.access_token}}
+
+### Saját kockázati pontszám: aktuális érték, kategória, indoklások, 12 hét alakulása (UC15)
+GET {{gateway}}/api/analytics/risk
+Authorization: Bearer {{token}}
+
+### Edzőként egy hozzárendelt futó pontszáma (edző tokennel)
+# GET {{gateway}}/api/analytics/risk?runnerId=<futó azonosító>

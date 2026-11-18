@@ -76,6 +76,43 @@ services:
       timeout: 10s
       retries: 10
 
+  analytics-db:
+    image: postgres:18.7-alpine
+    environment:
+      POSTGRES_DB: analytics
+      POSTGRES_USER: analytics
+      POSTGRES_PASSWORD: analytics
+    ports:
+      - "5443:5432" # helyi `dotnet run`-hoz
+    volumes:
+      - analytics-db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U analytics -d analytics"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Terhelési mutatók, kockázati pontszám. Útvonal: http://localhost/api/analytics
+  analytics-api:
+    build:
+      context: ./backend
+      dockerfile: src/Analytics.Api/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Default: Host=analytics-db;Database=analytics;Username=analytics;Password=analytics
+      RabbitMq__Host: rabbitmq
+      Keycloak__MetadataAddress: http://keycloak:8080/auth/realms/futoedzes/.well-known/openid-configuration
+    depends_on:
+      analytics-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.analytics.rule=PathPrefix(`/api/analytics`)
+      - traefik.http.routers.analytics.entrypoints=web
+      - traefik.http.services.analytics.loadbalancer.server.port=8080
+
   training-db:
     image: postgres:18.7-alpine
     environment:
@@ -114,5 +151,6 @@ services:
       - traefik.http.services.training.loadbalancer.server.port=8080
 
 volumes:
+  analytics-db-data:
   keycloak-db-data:
   training-db-data:
