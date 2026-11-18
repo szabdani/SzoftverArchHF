@@ -30,6 +30,7 @@ public class Workout
     /// <summary>Tempó másodperc/km-ben (időtartam / táv).</summary>
     public int PaceSecondsPerKm => CalculatePaceSecondsPerKm(DurationSeconds, DistanceKm);
 
+    /// <summary>Új edzés a futó nevére; a terhelést (sRPE) a bemenetből számolja.</summary>
     public static Workout Create(Guid runnerId, ValidWorkoutInput input, DateTimeOffset now)
     {
         var workout = new Workout { Id = Guid.CreateVersion7(now), RunnerId = runnerId, CreatedAt = now };
@@ -37,17 +38,22 @@ public class Workout
         return workout;
     }
 
+    /// <summary>Az edzés adatainak felülírása; a terhelést újraszámolja.</summary>
     public void Update(ValidWorkoutInput input, DateTimeOffset now) => Apply(input, now);
 
+    /// <summary>Az edzés állapota az integrációs eseményekhez (WorkoutRecorded, WorkoutUpdated).</summary>
     public WorkoutSnapshot ToSnapshot() =>
         new(Id, RunnerId, Date, Type, DistanceKm, DurationSeconds, Rpe, AvgHeartRate, ElevationGainM, Load);
 
+    /// <summary>Edzésterhelés (sRPE): RPE × időtartam percben, egy tizedesre kerekítve.</summary>
     public static double CalculateLoad(int rpe, int durationSeconds) =>
         Math.Round(rpe * durationSeconds / 60.0, 1, MidpointRounding.AwayFromZero);
 
+    /// <summary>Tempó másodperc/km-ben: időtartam / táv, egész másodpercre kerekítve.</summary>
     public static int CalculatePaceSecondsPerKm(int durationSeconds, decimal distanceKm) =>
         (int)Math.Round(durationSeconds / distanceKm, MidpointRounding.AwayFromZero);
 
+    /// <summary>A bemenet beírása a mezőkbe; az üres megjegyzésből null lesz.</summary>
     private void Apply(ValidWorkoutInput input, DateTimeOffset now)
     {
         Date = input.Date;

@@ -1,6 +1,72 @@
-@Training.Api_HostAddress = http://localhost:5030
+# Training API kipróbálása a docker compose-zal futó rendszeren (http://localhost).
+# Sorrendben futtasd: először a tokenkérést, utána a többit.
 
-GET {{Training.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+@gateway = http://localhost
+
+### Token kérése (runner@futoedzes.local / Demo1234)
+# @name login
+POST {{gateway}}/auth/realms/futoedzes/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id=futoedzes-frontend&username=runner@futoedzes.local&password=Demo1234
 
 ###
+@token = {{login.response.body.$.access_token}}
+
+### Edzés rögzítése
+# @name create
+POST {{gateway}}/api/training/workouts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "date": "2026-11-16",
+  "type": "easy",
+  "distanceKm": 8.5,
+  "duration": "00:48:30",
+  "avgHeartRate": 142,
+  "elevationGainM": 60,
+  "rpe": 4,
+  "note": "Könnyű kör"
+}
+
+###
+@workoutId = {{create.response.body.$.id}}
+
+### Saját edzések listája (opcionális dátumtartomány)
+GET {{gateway}}/api/training/workouts?from=2026-11-01&to=2026-11-30
+Authorization: Bearer {{token}}
+
+### Egy edzés
+GET {{gateway}}/api/training/workouts/{{workoutId}}
+Authorization: Bearer {{token}}
+
+### Edzés módosítása
+PUT {{gateway}}/api/training/workouts/{{workoutId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "date": "2026-11-16",
+  "type": "tempo",
+  "distanceKm": 10,
+  "duration": "00:50:00",
+  "rpe": 7
+}
+
+### Hibás kérés: validációs hibák mezőnként (400)
+POST {{gateway}}/api/training/workouts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "date": "2099-01-01",
+  "type": "easy",
+  "distanceKm": 0.05,
+  "duration": "00:00:30",
+  "rpe": 11
+}
+
+### Edzés törlése
+DELETE {{gateway}}/api/training/workouts/{{workoutId}}
+Authorization: Bearer {{token}}

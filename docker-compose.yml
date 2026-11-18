@@ -76,5 +76,43 @@ services:
       timeout: 10s
       retries: 10
 
+  training-db:
+    image: postgres:18.7-alpine
+    environment:
+      POSTGRES_DB: training
+      POSTGRES_USER: training
+      POSTGRES_PASSWORD: training
+    ports:
+      - "5442:5432" # helyi `dotnet run`-hoz
+    volumes:
+      - training-db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U training -d training"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Edzések, célok, edzéstervek. Útvonal: http://localhost/api/training
+  training-api:
+    build:
+      context: ./backend
+      dockerfile: src/Training.Api/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Default: Host=training-db;Database=training;Username=training;Password=training
+      RabbitMq__Host: rabbitmq
+      Keycloak__MetadataAddress: http://keycloak:8080/auth/realms/futoedzes/.well-known/openid-configuration
+    depends_on:
+      training-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.training.rule=PathPrefix(`/api/training`)
+      - traefik.http.routers.training.entrypoints=web
+      - traefik.http.services.training.loadbalancer.server.port=8080
+
 volumes:
   keycloak-db-data:
+  training-db-data:

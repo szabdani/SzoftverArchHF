@@ -16,6 +16,10 @@ public static class WorkoutValidator
     public const int MinRpe = 1;
     public const int MaxRpe = 10;
 
+    /// <summary>
+    /// Ellenőrzi a kérést. Siker esetén a teljes, érvényes bemenetet adja vissza,
+    /// hiba esetén mezőnként a magyar hibaüzeneteket.
+    /// </summary>
     public static bool TryValidate(
         WorkoutRequest request,
         DateOnly today,
