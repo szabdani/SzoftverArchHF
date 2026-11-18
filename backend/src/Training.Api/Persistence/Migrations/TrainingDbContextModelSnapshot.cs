@@ -263,6 +263,57 @@ namespace Training.Api.Persistence.Migrations
                     b.ToTable("outbox_state", (string)null);
                 });
 
+            modelBuilder.Entity("Training.Api.Goals.Goal", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("ArchivedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("archived_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<decimal>("DistanceKm")
+                        .HasPrecision(7, 4)
+                        .HasColumnType("numeric(7,4)")
+                        .HasColumnName("distance_km");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<Guid>("RunnerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("runner_id");
+
+                    b.Property<DateOnly>("TargetDate")
+                        .HasColumnType("date")
+                        .HasColumnName("target_date");
+
+                    b.Property<int?>("TargetTimeSeconds")
+                        .HasColumnType("integer")
+                        .HasColumnName("target_time_seconds");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id")
+                        .HasName("pk_goals");
+
+                    b.HasIndex("RunnerId")
+                        .HasDatabaseName("ix_goals_runner_id");
+
+                    b.ToTable("goals", (string)null);
+                });
+
             modelBuilder.Entity("Training.Api.Workouts.Workout", b =>
                 {
                     b.Property<Guid>("Id")

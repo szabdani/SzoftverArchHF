@@ -2,6 +2,7 @@ using BuildingBlocks;
 using BuildingBlocks.Messaging;
 using BuildingBlocks.Persistence;
 using Training.Api.CoachLinks;
+using Training.Api.Goals;
 using Training.Api.Persistence;
 using Training.Api.Workouts;
 
@@ -14,11 +15,13 @@ builder.Services.AddMessaging<TrainingDbContext>(builder.Configuration, "trainin
     bus.AddConsumer<CoachRunnerLinkConsumer>();
 });
 builder.Services.AddScoped<IWorkoutService, WorkoutService>();
+builder.Services.AddScoped<IGoalService, GoalService>();
 
 var app = builder.Build();
 
 app.UseServiceDefaults();
 app.MapWorkoutEndpoints();
+app.MapGoalEndpoints();
 
 await app.MigrateDatabaseAsync<TrainingDbContext>();
 await app.RunAsync();
