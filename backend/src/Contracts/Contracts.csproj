@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Szolgáltatások között utazó integrációs események. Szándékosan függőség nélküli. -->
+</Project>

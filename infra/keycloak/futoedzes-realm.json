@@ -1,0 +1,102 @@
+{
+  "realm": "futoedzes",
+  "displayName": "Futóedzés-tervező",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": true,
+  "registrationEmailAsUsername": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "rememberMe": true,
+  "roles": {
+    "realm": [
+      { "name": "runner", "description": "Futó" },
+      { "name": "coach", "description": "Edző" },
+      { "name": "admin", "description": "Adminisztrátor" },
+      { "name": "offline_access", "description": "${role_offline-access}" },
+      { "name": "uma_authorization", "description": "${role_uma_authorization}" },
+      {
+        "name": "default-roles-futoedzes",
+        "description": "Új felhasználó alapértelmezett szerepkörei: futó.",
+        "composite": true,
+        "composites": { "realm": ["runner", "offline_access", "uma_authorization"] }
+      }
+    ]
+  },
+  "defaultRole": { "name": "default-roles-futoedzes" },
+  "clients": [
+    {
+      "clientId": "futoedzes-frontend",
+      "name": "Futóedzés frontend",
+      "enabled": true,
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "implicitFlowEnabled": false,
+      "redirectUris": ["http://localhost/*", "http://localhost:5173/*"],
+      "webOrigins": ["+"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost/*##http://localhost:5173/*"
+      },
+      "protocolMappers": [
+        {
+          "name": "futoedzes-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "futoedzes-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "admin@futoedzes.local",
+      "email": "admin@futoedzes.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Admin",
+      "lastName": "Felhasználó",
+      "credentials": [{ "type": "password", "value": "Demo1234", "temporary": false }],
+      "realmRoles": ["admin"]
+    },
+    {
+      "username": "coach@futoedzes.local",
+      "email": "coach@futoedzes.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Edző",
+      "lastName": "Demó",
+      "credentials": [{ "type": "password", "value": "Demo1234", "temporary": false }],
+      "realmRoles": ["coach"]
+    },
+    {
+      "username": "runner@futoedzes.local",
+      "email": "runner@futoedzes.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Futó",
+      "lastName": "Egy",
+      "credentials": [{ "type": "password", "value": "Demo1234", "temporary": false }],
+      "realmRoles": ["default-roles-futoedzes"]
+    },
+    {
+      "username": "runner2@futoedzes.local",
+      "email": "runner2@futoedzes.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Futó",
+      "lastName": "Kettő",
+      "credentials": [{ "type": "password", "value": "Demo1234", "temporary": false }],
+      "realmRoles": ["default-roles-futoedzes"]
+    }
+  ]
+}
