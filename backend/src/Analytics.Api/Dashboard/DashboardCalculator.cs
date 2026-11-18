@@ -1,5 +1,6 @@
 using Analytics.Api.ReadModels;
 using Analytics.Api.Risk;
+using Analytics.Api.Rules;
 using Contracts.Training;
 
 namespace Analytics.Api.Dashboard;
@@ -68,13 +69,15 @@ public static class DashboardCalculator
     /// <param name="plannedWorkouts">A tervezett edzések az utolsó 12 hétre (a folyó hét végéig).</param>
     /// <param name="firstWorkoutDate">A legelső edzés napja (az ACWR-hez kell, lásd <see cref="RiskCalculator"/>).</param>
     /// <param name="currentRisk">A legutóbbi tárolt kockázati pontszám, ha van.</param>
+    /// <param name="settings">A kockázati szabályok beállításai; ha nincs megadva, a spec alapértelmezései.</param>
     public static DashboardResponse Calculate(
         DashboardPeriod period,
         IReadOnlyCollection<WorkoutRecord> workouts,
         IReadOnlyCollection<PlannedWorkoutRecord> plannedWorkouts,
         DateOnly today,
         DateOnly? firstWorkoutDate,
-        RiskScoreSnapshot? currentRisk)
+        RiskScoreSnapshot? currentRisk,
+        RuleSettings? settings = null)
     {
         // Az időszak a hét (hétfőtől) vagy a hónap eleje és a mai nap közötti rész.
         var from = period == DashboardPeriod.Week ? WeekStart(today) : new DateOnly(today.Year, today.Month, 1);
@@ -102,7 +105,7 @@ public static class DashboardCalculator
         var currentWeekStart = WeekStart(today);
         var weeks = Enumerable.Range(0, WeekCount)
             .Select(index => currentWeekStart.AddDays(-7 * (WeekCount - 1 - index)))
-            .Select(weekStart => Week(weekStart, workouts, plannedWorkouts, today, firstWorkoutDate))
+            .Select(weekStart => Week(weekStart, workouts, plannedWorkouts, today, firstWorkoutDate, settings))
             .ToList();
 
         return new DashboardResponse(period, summary, intensity, weeks);
@@ -121,7 +124,8 @@ public static class DashboardCalculator
         IReadOnlyCollection<WorkoutRecord> workouts,
         IReadOnlyCollection<PlannedWorkoutRecord> plannedWorkouts,
         DateOnly today,
-        DateOnly? firstWorkoutDate)
+        DateOnly? firstWorkoutDate,
+        RuleSettings? settings)
     {
         var weekEnd = weekStart.AddDays(6);
         var evaluationDay = weekEnd < today ? weekEnd : today;
@@ -132,7 +136,7 @@ public static class DashboardCalculator
         // A kockázati számításhoz a kiértékelés napját megelőző 7 nap kihagyott edzései kellenek.
         var missedLast7Days = plannedWorkouts.Count(p =>
             p.Status == PlannedWorkoutStatus.Missed && p.Date >= evaluationDay.AddDays(-6) && p.Date <= evaluationDay);
-        var risk = RiskCalculator.Calculate(workouts, missedLast7Days, evaluationDay, firstWorkoutDate);
+        var risk = RiskCalculator.Calculate(workouts, missedLast7Days, evaluationDay, firstWorkoutDate, settings);
 
         return new WeeklyStats(
             weekStart,

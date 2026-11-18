@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Analytics.Api.Alerts;
 using Analytics.Api.Persistence;
+using Analytics.Api.Rules;
 using BuildingBlocks.Auth;
 using BuildingBlocks.CoachAccess;
 using BuildingBlocks.Time;
@@ -67,7 +68,8 @@ public class RiskService(AnalyticsDbContext db, TimeProvider time) : IRiskServic
                 && plannedWorkout.Date <= today)
             .ToListAsync(ct);
 
-        var result = RiskCalculator.Calculate(workouts, missedLast7Days.Count, today, firstWorkoutDate);
+        var settings = await db.GetRuleSettingsAsync(ct);
+        var result = RiskCalculator.Calculate(workouts, missedLast7Days.Count, today, firstWorkoutDate, settings);
 
         var snapshot = await db.RiskScoreSnapshots.FirstOrDefaultAsync(snapshot => snapshot.RunnerId == runnerId && snapshot.Date == today, ct);
         if (snapshot is null)
@@ -77,8 +79,26 @@ public class RiskService(AnalyticsDbContext db, TimeProvider time) : IRiskServic
         }
 
         snapshot.Apply(result, time.GetUtcNow());
-        await AddNewAlertsAsync(runnerId, AlertRules.Evaluate(result, missedLast7Days, today), ct);
+        await AddNewAlertsAsync(runnerId, AlertRules.Evaluate(result, missedLast7Days, today, settings), ct);
         await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>
+    /// Minden futónak újraszámolja a mai pontszámát (pl. a küszöbök módosítása után).
+    /// </summary>
+    /// <returns>Az újraszámolt futók száma.</returns>
+    public async Task<int> RecalculateAllAsync(CancellationToken ct)
+    {
+        var runnerIds = await db.Workouts.Select(workout => workout.RunnerId)
+            .Union(db.PlannedWorkouts.Select(plannedWorkout => plannedWorkout.RunnerId))
+            .ToListAsync(ct);
+
+        foreach (var runnerId in runnerIds)
+        {
+            await RecalculateAsync(runnerId, ct);
+        }
+
+        return runnerIds.Count;
     }
 
     /// <summary>

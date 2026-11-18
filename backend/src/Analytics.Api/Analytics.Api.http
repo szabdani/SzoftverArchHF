@@ -47,3 +47,36 @@ Authorization: Bearer {{token}}
 
 ### Edzőként egy hozzárendelt futó pontszáma (edző tokennel)
 # GET {{gateway}}/api/analytics/risk?runnerId=<futó azonosító>
+
+### Admin token (admin@futoedzes.local / Demo1234)
+# @name adminLogin
+POST {{gateway}}/auth/realms/futoedzes/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id=futoedzes-frontend&username=admin@futoedzes.local&password=Demo1234
+
+###
+@adminToken = {{adminLogin.response.body.$.access_token}}
+
+### Admin: a szabályok küszöbei és aktív állapota (UC17)
+GET {{gateway}}/api/analytics/admin/rules
+Authorization: Bearer {{adminToken}}
+
+### Admin: beállítások felülírása (mentés után a mai pontszámok újraszámolódnak)
+PUT {{gateway}}/api/analytics/admin/rules
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "acwrCritical": 1.5,
+  "acwrElevated": 1.3,
+  "weeklyKmIncreasePercent": 10,
+  "intenseRpe": 7,
+  "intenseDaysPerWeek": 3,
+  "missedWorkoutsPerWeek": 2,
+  "acwrEnabled": true,
+  "weeklyKmIncreaseEnabled": true,
+  "intenseDaysEnabled": true,
+  "noRestDayEnabled": true,
+  "missedWorkoutsEnabled": true
+}

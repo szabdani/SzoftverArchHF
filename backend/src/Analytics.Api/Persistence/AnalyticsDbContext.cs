@@ -1,6 +1,7 @@
 using Analytics.Api.Alerts;
 using Analytics.Api.ReadModels;
 using Analytics.Api.Risk;
+using Analytics.Api.Rules;
 using BuildingBlocks.CoachAccess;
 using BuildingBlocks.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +19,7 @@ public class AnalyticsDbContext(DbContextOptions<AnalyticsDbContext> options) : 
     public DbSet<RiskScoreSnapshot> RiskScoreSnapshots => Set<RiskScoreSnapshot>();
     public DbSet<Alert> Alerts => Set<Alert>();
     public DbSet<ActiveGoalRecord> ActiveGoals => Set<ActiveGoalRecord>();
+    public DbSet<RuleSettings> RuleSettings => Set<RuleSettings>();
     public DbSet<CoachRunnerLink> CoachRunnerLinks => Set<CoachRunnerLink>();
 
     /// <summary>
@@ -72,6 +74,12 @@ public class AnalyticsDbContext(DbContextOptions<AnalyticsDbContext> options) : 
 
             // Ugyanaz a szabály ugyanarra az időszakra egyszer (spec 3.6).
             alert.HasIndex(x => new { x.RunnerId, x.Rule, x.PeriodKey }).IsUnique();
+        });
+
+        modelBuilder.Entity<RuleSettings>(settings =>
+        {
+            settings.HasKey(x => x.Id);
+            settings.Property(x => x.Id).ValueGeneratedNever();
         });
 
         modelBuilder.AddCoachRunnerLinks();

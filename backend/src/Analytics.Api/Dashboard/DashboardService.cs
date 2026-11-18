@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Analytics.Api.Persistence;
+using Analytics.Api.Rules;
 using BuildingBlocks.Auth;
 using BuildingBlocks.CoachAccess;
 using BuildingBlocks.Time;
@@ -50,7 +51,8 @@ public class DashboardService(AnalyticsDbContext db, TimeProvider time) : IDashb
             .OrderByDescending(snapshot => snapshot.Date)
             .FirstOrDefaultAsync(ct);
 
-        return DashboardCalculator.Calculate(period, workouts, plannedWorkouts, today, firstWorkoutDate, currentRisk);
+        var settings = await db.GetRuleSettingsAsync(ct);
+        return DashboardCalculator.Calculate(period, workouts, plannedWorkouts, today, firstWorkoutDate, currentRisk, settings);
     }
 
     /// <summary>

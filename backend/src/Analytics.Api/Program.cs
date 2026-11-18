@@ -5,6 +5,7 @@ using Analytics.Api.Persistence;
 using Analytics.Api.ReadModels;
 using Analytics.Api.Recommendations;
 using Analytics.Api.Risk;
+using Analytics.Api.Rules;
 using BuildingBlocks;
 using BuildingBlocks.Messaging;
 using BuildingBlocks.Persistence;
@@ -24,6 +25,7 @@ builder.Services.AddScoped<IRiskService, RiskService>();
 builder.Services.AddScoped<IAlertService, AlertService>();
 builder.Services.AddScoped<IRecommendationService, RecommendationService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IRuleSettingsService, RuleSettingsService>();
 builder.Services.AddHostedService<DailyRiskJob>();
 
 var app = builder.Build();
@@ -33,6 +35,7 @@ app.MapRiskEndpoints();
 app.MapAlertEndpoints();
 app.MapRecommendationEndpoints();
 app.MapDashboardEndpoints();
+app.MapRuleSettingsEndpoints();
 
 await app.MigrateDatabaseAsync<AnalyticsDbContext>();
 await app.RunAsync();
