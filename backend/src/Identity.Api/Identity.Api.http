@@ -59,3 +59,31 @@ Authorization: Bearer {{coachToken}}
 ### Futó: kapcsolat megszüntetése (utána az edző 403-at kap a fenti kérésre)
 DELETE {{gateway}}/api/identity/links/{{invitationId}}
 Authorization: Bearer {{runnerToken}}
+
+### Admin token (admin@futoedzes.local / Demo1234)
+# @name adminLogin
+POST {{gateway}}/auth/realms/futoedzes/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id=futoedzes-frontend&username=admin@futoedzes.local&password=Demo1234
+
+###
+@adminToken = {{adminLogin.response.body.$.access_token}}
+
+### Admin: felhasználók keresése szerepkörrel (UC16)
+GET {{gateway}}/api/identity/admin/users?search=runner
+Authorization: Bearer {{adminToken}}
+
+### Admin: a futóból edző lesz (a változás a következő bejelentkezéskor / token frissítéskor él)
+PUT {{gateway}}/api/identity/admin/users/{{runnerId}}/role
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{ "role": "coach" }
+
+### Admin: felhasználó letiltása
+PUT {{gateway}}/api/identity/admin/users/{{runnerId}}/enabled
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{ "enabled": false }
