@@ -1,13 +1,24 @@
+using System.ComponentModel.DataAnnotations;
+using BuildingBlocks.Validation;
 using Contracts;
 using Training.Api.Workouts;
 
 namespace Training.Api.Goals;
 
 /// <summary>
-/// Cél kitűzése vagy módosítása. A táv csak egyéni (custom) célnál kell.
-/// A célidő formátuma óó:pp:mm (pl. "01:45:00").
+/// Cél kitűzése vagy módosítása. A mezőnkénti szabályok az attribútumokban vannak (közös séma a
+/// frontenddel). A táv csak egyéni (custom) célnál kell, a célidő formátuma óó:pp:mm (pl. "01:45:00").
 /// </summary>
-public record GoalRequest(GoalType? Type, decimal? DistanceKm, DateOnly? TargetDate, TimeSpan? TargetTime);
+public record GoalRequest(
+    [property: Required(ErrorMessage = "A céltípus megadása kötelező.")]
+    [property: EnumDataType(typeof(GoalType), ErrorMessage = "Ismeretlen céltípus.")]
+    GoalType? Type,
+    [property: Range(0.1, 500, ErrorMessage = "A táv 0,1 és 500 km között lehet.")]
+    decimal? DistanceKm,
+    [property: Required(ErrorMessage = "A céldátum megadása kötelező.")]
+    DateOnly? TargetDate,
+    [property: RegularExpression(ValidationPatterns.Duration1MinTo24Hours, ErrorMessage = "A célidő 1 perc és 23:59:59 között lehet, óó:pp:mm formátumban.")]
+    TimeSpan? TargetTime);
 
 /// <summary>A validáció után már biztosan teljes, érvényes bemenet.</summary>
 public record ValidGoalInput(GoalType Type, decimal DistanceKm, DateOnly TargetDate, int? TargetTimeSeconds);

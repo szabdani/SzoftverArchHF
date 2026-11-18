@@ -63,20 +63,34 @@ public class WorkoutValidatorTests
     }
 
     /// <summary>
-    /// Táv: 0,1–100 km, legfeljebb két tizedesjegy.
+    /// Táv: 0,1–100 km (a több tizedesjegy nem hiba, kerekítődik).
     /// </summary>
     [Theory]
     [InlineData(0.09, false)]
     [InlineData(0.1, true)]
     [InlineData(100, true)]
     [InlineData(100.01, false)]
-    [InlineData(10.12, true)]
-    [InlineData(10.123, false)]
+    [InlineData(10.123, true)]
     public void DistanceKm_Boundaries(double distanceKm, bool expectedValid)
     {
         var request = ValidRequest() with { DistanceKm = (decimal)distanceKm };
 
         AssertValidity(request, expectedValid, "distanceKm");
+    }
+
+    /// <summary>
+    /// A táv két tizedesre kerekítődik (a felezésnél felfelé).
+    /// </summary>
+    [Theory]
+    [InlineData(10.123, 10.12)]
+    [InlineData(10.125, 10.13)]
+    [InlineData(8.5, 8.5)]
+    public void DistanceKm_IsRoundedToTwoDecimals(double distanceKm, double expected)
+    {
+        var request = ValidRequest() with { DistanceKm = (decimal)distanceKm };
+
+        Assert.True(WorkoutValidator.TryValidate(request, Today, out var input, out _));
+        Assert.Equal((decimal)expected, input.DistanceKm);
     }
 
     /// <summary>

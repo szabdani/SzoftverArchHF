@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Identity.Api.Admin;
 
 /// <summary>
@@ -7,7 +9,10 @@ namespace Identity.Api.Admin;
 public record AdminUserResponse(Guid Id, string? Email, string Name, string? Role, bool Enabled);
 
 /// <summary>Szerepkör módosítása: runner, coach vagy admin.</summary>
-public record SetRoleRequest(string? Role);
+public record SetRoleRequest(
+    [property: Required(ErrorMessage = "A szerepkör megadása kötelező.")]
+    [property: AllowedValues("runner", "coach", "admin", ErrorMessage = "Érvényes értékek: runner, coach, admin.")]
+    string? Role);
 
 /// <summary>Felhasználó engedélyezése vagy letiltása.</summary>
 public record SetEnabledRequest(bool Enabled);

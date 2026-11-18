@@ -24,7 +24,7 @@ builder.Services.AddHostedService<MissedWorkoutJob>();
 
 var app = builder.Build();
 
-app.UseServiceDefaults();
+app.UseServiceDefaults("training");
 app.MapWorkoutEndpoints();
 app.MapGoalEndpoints();
 app.MapPlanEndpoints();

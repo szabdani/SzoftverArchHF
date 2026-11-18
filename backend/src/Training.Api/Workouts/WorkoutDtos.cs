@@ -1,21 +1,35 @@
+using System.ComponentModel.DataAnnotations;
+using BuildingBlocks.Validation;
 using Contracts;
 
 namespace Training.Api.Workouts;
 
 /// <summary>
-/// Létrehozás és módosítás kérése. A kötelező mezők is nullable-k, hogy a hiányzó mezőt
-/// érthető validációs hibával utasíthassuk el, ne csendes alapértékkel.
-/// Az időtartam formátuma óó:pp:mm (pl. "01:05:30").
-/// A tervezett edzés azonosítója (UC08) csak rögzítéskor számít, módosításkor a kapcsolat nem változik.
+/// Létrehozás és módosítás kérése (spec 3.2). A mezőnkénti szabályok az attribútumokban vannak: a szerver
+/// ezekkel validál, és ugyanezek kerülnek az OpenAPI sémába a frontendnek. A kötelező mezők is nullable-k,
+/// hogy a hiányzó mezőt érthető hibával utasíthassuk el. Az időtartam formátuma óó:pp:mm (pl. "01:05:30");
+/// a táv két tizedesre kerekítődik. A tervezett edzés azonosítója (UC08) csak rögzítéskor számít.
 /// </summary>
 public record WorkoutRequest(
+    [property: Required(ErrorMessage = "A dátum megadása kötelező.")]
     DateOnly? Date,
+    [property: Required(ErrorMessage = "Az edzéstípus megadása kötelező.")]
+    [property: EnumDataType(typeof(WorkoutType), ErrorMessage = "Ismeretlen edzéstípus.")]
     WorkoutType? Type,
+    [property: Required(ErrorMessage = "A táv megadása kötelező.")]
+    [property: Range(0.1, 100, ErrorMessage = "A táv 0,1 és 100 km között lehet.")]
     decimal? DistanceKm,
+    [property: Required(ErrorMessage = "Az időtartam megadása kötelező.")]
+    [property: RegularExpression(ValidationPatterns.Duration1MinTo10Hours, ErrorMessage = "Az időtartam 1 perc és 10 óra között lehet, óó:pp:mm formátumban.")]
     TimeSpan? Duration,
+    [property: Range(40, 220, ErrorMessage = "Az átlagpulzus 40 és 220 ütés/perc között lehet.")]
     int? AvgHeartRate,
+    [property: Range(0, 5000, ErrorMessage = "Az emelkedés 0 és 5000 méter között lehet.")]
     int? ElevationGainM,
+    [property: Required(ErrorMessage = "Az RPE megadása kötelező.")]
+    [property: Range(1, 10, ErrorMessage = "Az RPE 1 és 10 közötti egész szám lehet.")]
     int? Rpe,
+    [property: MaxLength(Workout.NoteMaxLength, ErrorMessage = "A megjegyzés legfeljebb 500 karakter lehet.")]
     string? Note,
     Guid? PlannedWorkoutId = null);
 

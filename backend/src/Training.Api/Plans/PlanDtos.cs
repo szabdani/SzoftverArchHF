@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+using BuildingBlocks.Validation;
 using Contracts;
 using Contracts.Training;
 
@@ -8,7 +10,16 @@ namespace Training.Api.Plans;
 /// adja meg, melyik futójának készíti; a futó elhagyhatja. Ha <c>LinkActiveGoal</c> igaz,
 /// a terv a futó aktuális aktív céljához kapcsolódik.
 /// </summary>
-public record PlanRequest(Guid? RunnerId, string? Name, DateOnly? StartDate, DateOnly? EndDate, bool LinkActiveGoal);
+public record PlanRequest(
+    Guid? RunnerId,
+    [property: Required(ErrorMessage = "A terv nevének megadása kötelező.")]
+    [property: MaxLength(TrainingPlan.NameMaxLength, ErrorMessage = "A terv neve legfeljebb 100 karakter lehet.")]
+    string? Name,
+    [property: Required(ErrorMessage = "A kezdődátum megadása kötelező.")]
+    DateOnly? StartDate,
+    [property: Required(ErrorMessage = "A záródátum megadása kötelező.")]
+    DateOnly? EndDate,
+    bool LinkActiveGoal);
 
 /// <summary>A validáció után már biztosan teljes, érvényes bemenet.</summary>
 public record ValidPlanInput(string Name, DateOnly StartDate, DateOnly EndDate, bool LinkActiveGoal);
@@ -38,11 +49,19 @@ public record PlanResponse(
 /// közül legalább az egyik kell. Az időtartam formátuma óó:pp:mm.
 /// </summary>
 public record PlannedWorkoutRequest(
+    [property: Required(ErrorMessage = "A dátum megadása kötelező.")]
     DateOnly? Date,
+    [property: Required(ErrorMessage = "Az edzéstípus megadása kötelező.")]
+    [property: EnumDataType(typeof(WorkoutType), ErrorMessage = "Ismeretlen edzéstípus.")]
     WorkoutType? Type,
+    [property: Range(0.1, 100, ErrorMessage = "A táv 0,1 és 100 km között lehet.")]
     decimal? PlannedDistanceKm,
+    [property: RegularExpression(ValidationPatterns.Duration1MinTo10Hours, ErrorMessage = "Az időtartam 1 perc és 10 óra között lehet, óó:pp:mm formátumban.")]
     TimeSpan? PlannedDuration,
+    [property: Required(ErrorMessage = "A cél RPE megadása kötelező.")]
+    [property: Range(1, 10, ErrorMessage = "A cél RPE 1 és 10 közötti egész szám lehet.")]
     int? TargetRpe,
+    [property: MaxLength(PlannedWorkout.NoteMaxLength, ErrorMessage = "A megjegyzés legfeljebb 500 karakter lehet.")]
     string? Note);
 
 /// <summary>A validáció után már biztosan teljes, érvényes bemenet.</summary>
