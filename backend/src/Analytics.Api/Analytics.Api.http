@@ -17,5 +17,18 @@ grant_type=password&client_id=futoedzes-frontend&username=runner@futoedzes.local
 GET {{gateway}}/api/analytics/risk
 Authorization: Bearer {{token}}
 
+### Nyugtázatlan figyelmeztetések súlyosság szerint (UC09)
+# @name alerts
+GET {{gateway}}/api/analytics/alerts
+Authorization: Bearer {{token}}
+
+### A nyugtázottakkal együtt
+GET {{gateway}}/api/analytics/alerts?includeAcknowledged=true
+Authorization: Bearer {{token}}
+
+### Az első figyelmeztetés nyugtázása
+POST {{gateway}}/api/analytics/alerts/{{alerts.response.body.$[0].id}}/acknowledge
+Authorization: Bearer {{token}}
+
 ### Edzőként egy hozzárendelt futó pontszáma (edző tokennel)
 # GET {{gateway}}/api/analytics/risk?runnerId=<futó azonosító>

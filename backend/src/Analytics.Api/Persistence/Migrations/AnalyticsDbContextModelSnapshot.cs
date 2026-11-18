@@ -23,6 +23,59 @@ namespace Analytics.Api.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Analytics.Api.Alerts.Alert", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("AcknowledgedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("acknowledged_at");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("message");
+
+                    b.Property<string>("PeriodKey")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("period_key");
+
+                    b.Property<string>("Rule")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("rule");
+
+                    b.Property<Guid>("RunnerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("runner_id");
+
+                    b.Property<string>("Severity")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("severity");
+
+                    b.HasKey("Id")
+                        .HasName("pk_alerts");
+
+                    b.HasIndex("RunnerId", "Rule", "PeriodKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_alerts_runner_id_rule_period_key");
+
+                    b.ToTable("alerts", (string)null);
+                });
+
             modelBuilder.Entity("Analytics.Api.ReadModels.PlannedWorkoutRecord", b =>
                 {
                     b.Property<Guid>("Id")
