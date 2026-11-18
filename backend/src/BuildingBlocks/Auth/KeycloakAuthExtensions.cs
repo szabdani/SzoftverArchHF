@@ -10,6 +10,9 @@ public static class KeycloakAuthExtensions
 {
     public const string RoleClaimType = "role";
 
+    /// <summary>
+    /// JWT Bearer hitelesítés a Keycloak tokenekkel, és a szerepkör alapú policy-k (<see cref="Policies"/>).
+    /// </summary>
     public static IServiceCollection AddKeycloakAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
         var keycloak = configuration.GetSection(KeycloakOptions.SectionName).Get<KeycloakOptions>()

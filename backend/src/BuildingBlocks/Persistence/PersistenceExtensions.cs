@@ -8,6 +8,10 @@ namespace BuildingBlocks.Persistence;
 
 public static class PersistenceExtensions
 {
+    /// <summary>
+    /// PostgreSQL DbContext a <c>ConnectionStrings:Default</c> alapján, snake_case táblanevekkel,
+    /// és adatbázis health check.
+    /// </summary>
     public static IServiceCollection AddPostgresDbContext<TDbContext>(this IServiceCollection services, IConfiguration configuration)
         where TDbContext : DbContext
     {

@@ -8,6 +8,7 @@ public static class AppTime
 {
     public static readonly TimeZoneInfo Zone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Budapest");
 
+    /// <summary>A mai nap a felhasználók időzónájában (Europe/Budapest).</summary>
     public static DateOnly GetLocalToday(this TimeProvider timeProvider) =>
         DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(timeProvider.GetUtcNow(), Zone).DateTime);
 }

@@ -13,5 +13,6 @@ public static class ClaimsPrincipalExtensions
             : throw new InvalidOperationException("A token nem tartalmaz érvényes 'sub' claim-et.");
     }
 
+    /// <summary>A bejelentkezett felhasználó e-mail címe (a token <c>email</c> claim-je), ha van.</summary>
     public static string? GetEmail(this ClaimsPrincipal user) => user.FindFirst("email")?.Value;
 }

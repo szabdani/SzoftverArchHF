@@ -22,6 +22,7 @@ public static class ServiceDefaults
         return builder;
     }
 
+    /// <summary>Az alap middleware-ek (hibakezelés, hitelesítés, jogosultság) és a /health, /openapi végpontok.</summary>
     public static WebApplication UseServiceDefaults(this WebApplication app)
     {
         app.UseExceptionHandler();

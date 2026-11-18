@@ -12,6 +12,7 @@ public abstract class CoachRunnerLinkConsumerBase<TDbContext>(TDbContext db)
     : IConsumer<CoachRunnerLinked>, IConsumer<CoachRunnerUnlinked>
     where TDbContext : DbContext, ICoachRunnerLinkStore
 {
+    /// <summary>Létrejött kapcsolat: felvesszük a helyi táblába (ha már megvan, csak az időpontot frissítjük).</summary>
     public async Task Consume(ConsumeContext<CoachRunnerLinked> context)
     {
         var message = context.Message;
@@ -35,6 +36,7 @@ public abstract class CoachRunnerLinkConsumerBase<TDbContext>(TDbContext db)
         await db.SaveChangesAsync(context.CancellationToken);
     }
 
+    /// <summary>Megszűnt kapcsolat: töröljük a helyi táblából.</summary>
     public async Task Consume(ConsumeContext<CoachRunnerUnlinked> context)
     {
         var message = context.Message;

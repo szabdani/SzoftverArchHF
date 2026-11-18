@@ -20,6 +20,7 @@ public interface ICoachRunnerLinkStore
 
 public static class CoachRunnerLinkModelBuilderExtensions
 {
+    /// <summary>A kapcsolattábla leképezése: összetett kulcs (edző, futó) és index a futóra.</summary>
     public static ModelBuilder AddCoachRunnerLinks(this ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<CoachRunnerLink>(link =>
