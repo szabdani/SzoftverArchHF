@@ -17,3 +17,5 @@ jobs:
           dotnet-version: 10.0.x
       - name: Build
         run: dotnet build backend/FutoedzesTervezo.slnx
+      - name: Test
+        run: dotnet test --solution backend/FutoedzesTervezo.slnx --no-build
