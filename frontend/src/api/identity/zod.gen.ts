@@ -33,7 +33,7 @@ export const zHttpValidationProblemDetails = z.object({
 });
 
 export const zInvitationRequest = z.object({
-    email: z.email().max(320)
+    email: z.email().min(1).max(320)
 });
 
 export const zInvitationStatus = z.enum([

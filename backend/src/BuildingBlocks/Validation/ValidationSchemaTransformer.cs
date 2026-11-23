@@ -49,11 +49,18 @@ public static class ValidationSchemaTransformer
 
             // Kötelező a [Required] és a nem-nullable típusú mező (a kérésekben ezt a szerver is mindig várja,
             // a válaszokban mindig benne van); a generátor egyébként minden konstruktor-paramétert kötelezőnek venne.
-            if (IsNonNullable(property) || attributes?.IsDefined(typeof(RequiredAttribute), inherit: true) == true)
+            var required = attributes?.GetCustomAttributes(typeof(RequiredAttribute), inherit: true).FirstOrDefault() as RequiredAttribute;
+            if (IsNonNullable(property) || required is not null)
             {
                 schema.Required ??= new HashSet<string>();
                 schema.Required.Add(property.Name);
                 schema.Properties[property.Name] = WithoutNull(propertySchema);
+
+                // A [Required] az üres szöveget is elutasítja; a sémában ezt a legalább 1 hossz fejezi ki.
+                if (required is { AllowEmptyStrings: false } && property.PropertyType == typeof(string) && propertySchema is OpenApiSchema stringSchema)
+                {
+                    stringSchema.MinLength ??= 1;
+                }
             }
             else
             {

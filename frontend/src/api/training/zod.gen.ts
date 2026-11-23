@@ -46,7 +46,7 @@ export const zPlannedWorkoutStatus = z.enum([
 
 export const zPlanRequest = z.object({
     runnerId: z.uuid().nullish(),
-    name: z.string().max(100),
+    name: z.string().min(1).max(100),
     startDate: z.iso.date(),
     endDate: z.iso.date(),
     linkActiveGoal: z.boolean()

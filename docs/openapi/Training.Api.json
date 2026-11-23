@@ -999,6 +999,7 @@
           },
           "name": {
             "maxLength": 100,
+            "minLength": 1,
             "type": "string"
           },
           "startDate": {
