@@ -18,17 +18,17 @@ public static class PlanEndpoints
         // jogosultságot a service ellenőrzi.
         var plans = app.MapGroup("/api/training/plans").RequireAuthorization(Policies.RunnerOrCoach);
 
-        plans.MapGet("/", ListAsync);
-        plans.MapGet("/{id:guid}", GetAsync);
-        plans.MapPost("/", CreateAsync);
-        plans.MapPut("/{id:guid}", UpdateAsync);
-        plans.MapDelete("/{id:guid}", DeleteAsync);
-        plans.MapPost("/{planId:guid}/workouts", AddPlannedWorkoutAsync);
-        plans.MapPut("/{planId:guid}/workouts/{id:guid}", UpdatePlannedWorkoutAsync);
-        plans.MapDelete("/{planId:guid}/workouts/{id:guid}", DeletePlannedWorkoutAsync);
+        plans.MapGet("/", ListAsync).Produces<List<PlanResponse>>();
+        plans.MapGet("/{id:guid}", GetAsync).Produces<PlanResponse>();
+        plans.MapPost("/", CreateAsync).Produces<PlanResponse>(StatusCodes.Status201Created).ProducesValidationProblem();
+        plans.MapPut("/{id:guid}", UpdateAsync).Produces<PlanResponse>().ProducesValidationProblem();
+        plans.MapDelete("/{id:guid}", DeleteAsync).Produces(StatusCodes.Status204NoContent);
+        plans.MapPost("/{planId:guid}/workouts", AddPlannedWorkoutAsync).Produces<PlannedWorkoutResponse>().ProducesValidationProblem();
+        plans.MapPut("/{planId:guid}/workouts/{id:guid}", UpdatePlannedWorkoutAsync).Produces<PlannedWorkoutResponse>().ProducesValidationProblem();
+        plans.MapDelete("/{planId:guid}/workouts/{id:guid}", DeletePlannedWorkoutAsync).Produces(StatusCodes.Status204NoContent);
 
         // Naptár (UC07): a tervezett edzések egy időszakban; a teljesítetteket a /workouts adja.
-        app.MapGet("/api/training/planned-workouts", ListPlannedWorkoutsAsync).RequireAuthorization(Policies.RunnerOrCoach);
+        app.MapGet("/api/training/planned-workouts", ListPlannedWorkoutsAsync).RequireAuthorization(Policies.RunnerOrCoach).Produces<List<PlannedWorkoutResponse>>();
     }
 
     /// <summary>

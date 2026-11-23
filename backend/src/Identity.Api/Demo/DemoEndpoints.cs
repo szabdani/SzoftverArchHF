@@ -14,8 +14,8 @@ public static class DemoEndpoints
     {
         var group = app.MapGroup("/api/identity/admin/demo").RequireAuthorization(Policies.Admin);
 
-        group.MapPost("/", CreateAsync);
-        group.MapDelete("/", RemoveAsync);
+        group.MapPost("/", CreateAsync).Produces<List<DemoRunnerResponse>>();
+        group.MapDelete("/", RemoveAsync).Produces(StatusCodes.Status204NoContent);
     }
 
     /// <summary>

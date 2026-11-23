@@ -16,11 +16,11 @@ public static class WorkoutEndpoints
     {
         var group = app.MapGroup("/api/training/workouts");
 
-        group.MapGet("/", ListAsync).RequireAuthorization(Policies.RunnerOrCoach);
-        group.MapGet("/{id:guid}", GetAsync).RequireAuthorization(Policies.RunnerOrCoach);
-        group.MapPost("/", CreateAsync).RequireAuthorization(Policies.Runner);
-        group.MapPut("/{id:guid}", UpdateAsync).RequireAuthorization(Policies.Runner);
-        group.MapDelete("/{id:guid}", DeleteAsync).RequireAuthorization(Policies.Runner);
+        group.MapGet("/", ListAsync).RequireAuthorization(Policies.RunnerOrCoach).Produces<List<WorkoutResponse>>();
+        group.MapGet("/{id:guid}", GetAsync).RequireAuthorization(Policies.RunnerOrCoach).Produces<WorkoutResponse>();
+        group.MapPost("/", CreateAsync).RequireAuthorization(Policies.Runner).Produces<WorkoutResponse>(StatusCodes.Status201Created).ProducesValidationProblem();
+        group.MapPut("/{id:guid}", UpdateAsync).RequireAuthorization(Policies.Runner).Produces<WorkoutResponse>().ProducesValidationProblem();
+        group.MapDelete("/{id:guid}", DeleteAsync).RequireAuthorization(Policies.Runner).Produces(StatusCodes.Status204NoContent);
     }
 
     /// <summary>

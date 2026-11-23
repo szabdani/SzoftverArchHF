@@ -17,15 +17,15 @@ public static class InvitationEndpoints
         var group = app.MapGroup("/api/identity");
 
         // UC12: az edző hív meg futót.
-        group.MapPost("/invitations", CreateAsync).RequireAuthorization(Policies.Coach);
-        group.MapGet("/invitations/sent", ListSentAsync).RequireAuthorization(Policies.Coach);
+        group.MapPost("/invitations", CreateAsync).RequireAuthorization(Policies.Coach).Produces<InvitationResponse>().ProducesValidationProblem();
+        group.MapGet("/invitations/sent", ListSentAsync).RequireAuthorization(Policies.Coach).Produces<List<InvitationResponse>>();
 
         // UC13: a futó fogadja el vagy utasítja el a meghívást, és ő szüntetheti meg a kapcsolatot.
-        group.MapGet("/invitations/received", ListReceivedAsync).RequireAuthorization(Policies.Runner);
-        group.MapPost("/invitations/{id:guid}/accept", AcceptAsync).RequireAuthorization(Policies.Runner);
-        group.MapPost("/invitations/{id:guid}/decline", DeclineAsync).RequireAuthorization(Policies.Runner);
-        group.MapGet("/links", ListLinksAsync).RequireAuthorization(Policies.RunnerOrCoach);
-        group.MapDelete("/links/{id:guid}", EndLinkAsync).RequireAuthorization(Policies.Runner);
+        group.MapGet("/invitations/received", ListReceivedAsync).RequireAuthorization(Policies.Runner).Produces<List<InvitationResponse>>();
+        group.MapPost("/invitations/{id:guid}/accept", AcceptAsync).RequireAuthorization(Policies.Runner).Produces<InvitationResponse>();
+        group.MapPost("/invitations/{id:guid}/decline", DeclineAsync).RequireAuthorization(Policies.Runner).Produces(StatusCodes.Status204NoContent);
+        group.MapGet("/links", ListLinksAsync).RequireAuthorization(Policies.RunnerOrCoach).Produces<List<InvitationResponse>>();
+        group.MapDelete("/links/{id:guid}", EndLinkAsync).RequireAuthorization(Policies.Runner).Produces(StatusCodes.Status204NoContent);
     }
 
     /// <summary>

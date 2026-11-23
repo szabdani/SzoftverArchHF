@@ -22,7 +22,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -44,7 +51,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Recommendation"
+                }
+              }
+            }
           }
         }
       }
@@ -73,7 +87,24 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
           }
         }
       }
@@ -85,7 +116,17 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CoachRunnerSummary"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -114,7 +155,17 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AlertResponse"
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -137,7 +188,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -149,7 +207,14 @@
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuleSettingsDto"
+                }
+              }
+            }
           }
         }
       },
@@ -169,7 +234,24 @@
         },
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RuleSettingsDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
           }
         }
       }
@@ -177,6 +259,396 @@
   },
   "components": {
     "schemas": {
+      "AlertResponse": {
+        "required": [
+          "id",
+          "runnerId",
+          "rule",
+          "severity",
+          "message",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "runnerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "rule": {
+            "$ref": "#/components/schemas/AlertRule"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/AlertSeverity"
+          },
+          "message": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "acknowledgedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "AlertRule": {
+        "enum": [
+          "suddenLoadIncrease",
+          "risingLoad",
+          "denseIntenseDays",
+          "missedWorkout",
+          "frequentMissedWorkouts",
+          "noRestDay"
+        ]
+      },
+      "AlertSeverity": {
+        "enum": [
+          "info",
+          "warning",
+          "critical"
+        ]
+      },
+      "CoachRunnerSummary": {
+        "required": [
+          "runnerId",
+          "weeklyKm"
+        ],
+        "type": "object",
+        "properties": {
+          "runnerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lastWorkoutDate": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "weeklyKm": {
+            "type": "number",
+            "format": "double"
+          },
+          "riskScore": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "riskCategory": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RiskCategory"
+              }
+            ]
+          }
+        }
+      },
+      "DashboardPeriod": {
+        "enum": [
+          "week",
+          "month"
+        ]
+      },
+      "DashboardResponse": {
+        "required": [
+          "period",
+          "summary",
+          "intensity",
+          "weeks"
+        ],
+        "type": "object",
+        "properties": {
+          "period": {
+            "$ref": "#/components/schemas/DashboardPeriod"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/DashboardSummary"
+          },
+          "intensity": {
+            "$ref": "#/components/schemas/IntensityDistribution"
+          },
+          "weeks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WeeklyStats"
+            }
+          }
+        }
+      },
+      "DashboardSummary": {
+        "required": [
+          "from",
+          "to",
+          "distanceKm",
+          "durationSeconds",
+          "elevationGainM",
+          "workoutCount"
+        ],
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          },
+          "distanceKm": {
+            "type": "number",
+            "format": "double"
+          },
+          "durationSeconds": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "elevationGainM": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "workoutCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "avgPaceSecondsPerKm": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "riskScore": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "riskCategory": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RiskCategory"
+              }
+            ]
+          }
+        }
+      },
+      "HttpValidationProblemDetails": {
+        "required": [
+          "errors"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "status": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "instance": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "errors": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "IntensityDistribution": {
+        "required": [
+          "easyMinutes",
+          "moderateMinutes",
+          "intenseMinutes"
+        ],
+        "type": "object",
+        "properties": {
+          "easyMinutes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "moderateMinutes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "intenseMinutes": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "Recommendation": {
+        "required": [
+          "type",
+          "rpeMin",
+          "rpeMax",
+          "durationMinutes",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/WorkoutType"
+          },
+          "rpeMin": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "rpeMax": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "durationMinutes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "distanceKm": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "RiskCategory": {
+        "enum": [
+          "low",
+          "medium",
+          "high"
+        ]
+      },
+      "RiskResponse": {
+        "required": [
+          "history"
+        ],
+        "type": "object",
+        "properties": {
+          "current": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RiskScoreResponse"
+              }
+            ]
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RiskScoreResponse"
+            }
+          }
+        }
+      },
+      "RiskScoreResponse": {
+        "required": [
+          "date",
+          "score",
+          "category",
+          "reasons",
+          "acuteLoad",
+          "chronicLoad",
+          "weeklyKm",
+          "previousWeeklyKm",
+          "calculatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "score": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "category": {
+            "$ref": "#/components/schemas/RiskCategory"
+          },
+          "reasons": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "acwr": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "acuteLoad": {
+            "type": "number",
+            "format": "double"
+          },
+          "chronicLoad": {
+            "type": "number",
+            "format": "double"
+          },
+          "weeklyKm": {
+            "type": "number",
+            "format": "double"
+          },
+          "previousWeeklyKm": {
+            "type": "number",
+            "format": "double"
+          },
+          "calculatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "RuleSettingsDto": {
         "required": [
           "acwrCritical",
@@ -252,6 +724,70 @@
             "format": "date-time"
           }
         }
+      },
+      "WeeklyStats": {
+        "required": [
+          "weekStart",
+          "distanceKm",
+          "load",
+          "riskScore",
+          "workoutCount",
+          "plannedCount",
+          "completedCount",
+          "missedCount"
+        ],
+        "type": "object",
+        "properties": {
+          "weekStart": {
+            "type": "string",
+            "format": "date"
+          },
+          "distanceKm": {
+            "type": "number",
+            "format": "double"
+          },
+          "load": {
+            "type": "number",
+            "format": "double"
+          },
+          "acwr": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "riskScore": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "workoutCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "plannedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "completedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "missedCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "WorkoutType": {
+        "enum": [
+          "easy",
+          "recovery",
+          "tempo",
+          "interval",
+          "long",
+          "race"
+        ]
       }
     }
   },

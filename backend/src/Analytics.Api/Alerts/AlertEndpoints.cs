@@ -15,8 +15,8 @@ public static class AlertEndpoints
     {
         var group = app.MapGroup("/api/analytics/alerts").RequireAuthorization(Policies.RunnerOrCoach);
 
-        group.MapGet("/", ListAsync);
-        group.MapPost("/{id:guid}/acknowledge", AcknowledgeAsync);
+        group.MapGet("/", ListAsync).Produces<List<AlertResponse>>();
+        group.MapPost("/{id:guid}/acknowledge", AcknowledgeAsync).Produces<AlertResponse>();
     }
 
     /// <summary>
