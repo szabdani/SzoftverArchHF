@@ -1,7 +1,9 @@
 import { createBrowserRouter } from 'react-router';
+import { AlertsPage } from '../pages/alerts/AlertsPage';
 import { NotReadyPage } from '../pages/NotReadyPage';
 import { WorkoutsPage } from '../pages/workouts/WorkoutsPage';
 import { AppLayout } from './AppLayout';
+import { HomePage } from './HomePage';
 import { RequireAuth } from './RequireAuth';
 
 /**
@@ -16,9 +18,9 @@ export const router = createBrowserRouter([
       </RequireAuth>
     ),
     children: [
-      { index: true, element: <NotReadyPage title="Áttekintés" /> },
+      { index: true, element: <HomePage /> },
       { path: 'workouts', element: <WorkoutsPage /> },
-      { path: 'alerts', element: <NotReadyPage title="Figyelmeztetések" /> },
+      { path: 'alerts', element: <AlertsPage /> },
       { path: 'coach', element: <NotReadyPage title="Futóim" /> },
       { path: 'admin/users', element: <NotReadyPage title="Felhasználók" /> },
       { path: 'admin/rules', element: <NotReadyPage title="Szabályok" /> },
