@@ -5,7 +5,7 @@ Szoftverarchitektúrák házi feladat.
 - `backend/` – ASP.NET Core mikroszolgáltatások (.NET 10)
 - `frontend/` – React + TypeScript (Vite)
 - `infra/` – Keycloak realm és egyéb infrastruktúra-konfiguráció
-- `docs/` – specifikáció
+- `docs/` – specifikáció, OpenAPI leírások és a [projektállapot](docs/projekt-allapot.md): hol tartunk, milyen döntések alapján, mit kell még tesztelni (AI-asszisztenseknek is)
 
 ## Indítás
 
