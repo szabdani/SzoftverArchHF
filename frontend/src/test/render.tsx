@@ -7,14 +7,14 @@ import { MemoryRouter } from 'react-router';
 import { theme } from '../app/theme';
 
 /**
- * Komponens renderelése a tesztekhez szükséges keretben: Mantine, dátumok, TanStack Query (újrapróbálás
+ * Komponens renderelése a tesztekhez szükséges keretben: Mantine (átmenetek és portálok nélkül), dátumok, TanStack Query (újrapróbálás
  * nélkül) és router a megadott útvonalon.
  */
 export function renderWithProviders(ui: ReactNode, { route = '/' }: { route?: string } = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
 
   return render(
-    <MantineProvider theme={theme}>
+    <MantineProvider theme={theme} env="test">
       <DatesProvider settings={{ locale: 'hu', firstDayOfWeek: 1 }}>
         <QueryClientProvider client={queryClient}>
           <MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>
