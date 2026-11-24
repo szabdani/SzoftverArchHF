@@ -1,4 +1,4 @@
-import { IconAdjustments, IconBell, IconLayoutDashboard, IconRun, IconUserCog, IconUsers, type Icon } from '@tabler/icons-react';
+import { IconAdjustments, IconBell, IconCalendar, IconLayoutDashboard, IconRun, IconTarget, IconUserCog, IconUsers, type Icon } from '@tabler/icons-react';
 import type { Role } from '../auth/roles';
 
 /** Egy menüpont: felirat, útvonal, ikon. */
@@ -15,7 +15,10 @@ export function navItemsFor(roles: Role[]): NavItem[] {
     items.push(
       { label: 'Áttekintés', to: '/', icon: IconLayoutDashboard },
       { label: 'Edzésnapló', to: '/workouts', icon: IconRun },
+      { label: 'Naptár', to: '/calendar', icon: IconCalendar },
+      { label: 'Célok', to: '/goals', icon: IconTarget },
       { label: 'Figyelmeztetések', to: '/alerts', icon: IconBell },
+      { label: 'Edzőim', to: '/coaches', icon: IconUsers },
     );
   }
 

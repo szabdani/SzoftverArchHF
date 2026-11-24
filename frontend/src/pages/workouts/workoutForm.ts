@@ -1,6 +1,7 @@
 import type { WorkoutRequest, WorkoutResponse, WorkoutType } from '../../api/training/types.gen';
 import { zWorkoutRequest } from '../../api/training/zod.gen';
 import { formatSeconds, parseDuration } from '../../lib/format';
+import { schemaErrors } from '../../lib/schemaErrors';
 
 /** Az edzés-űrlap értékei; az üres szám mező '' (a Mantine NumberInput így jelzi). */
 export type WorkoutFormValues = {
@@ -79,16 +80,7 @@ export function toRequestCandidate(values: WorkoutFormValues): Record<string, un
  * @returns mezőnként a magyar hibaüzenet (üres, ha minden rendben).
  */
 export function validateWorkout(values: WorkoutFormValues, today: string): Record<string, string> {
-  const errors: Record<string, string> = {};
-  const result = zWorkoutRequest.safeParse(toRequestCandidate(values));
-
-  if (!result.success) {
-    // Mezőnként az első hiba számít; a sémán kívüli mezőnél a zod saját üzenete marad.
-    for (const issue of result.error.issues) {
-      const field = String(issue.path[0]);
-      errors[field] ??= fieldMessages[field] ?? issue.message;
-    }
-  }
+  const errors = schemaErrors(zWorkoutRequest, toRequestCandidate(values), fieldMessages);
 
   if (values.date && values.date > today) {
     errors.date ??= 'A dátum nem lehet jövőbeli.';

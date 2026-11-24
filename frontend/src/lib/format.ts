@@ -1,4 +1,4 @@
-import type { WorkoutType } from '../api/training/types.gen';
+import type { GoalType, PlannedWorkoutStatus, WorkoutType } from '../api/training/types.gen';
 
 const number = new Intl.NumberFormat('hu-HU', { maximumFractionDigits: 2 });
 
@@ -10,6 +10,22 @@ export const workoutTypeLabels: Record<WorkoutType, string> = {
   interval: 'Intervall',
   long: 'Hosszú',
   race: 'Verseny',
+};
+
+/** A céltípusok magyar neve (spec 3.3). */
+export const goalTypeLabels: Record<GoalType, string> = {
+  fiveK: '5 km',
+  tenK: '10 km',
+  halfMarathon: 'Félmaraton',
+  marathon: 'Maraton',
+  custom: 'Egyéni táv',
+};
+
+/** A tervezett edzés állapotai (spec 3.4): magyar név és Mantine szín. */
+export const plannedStatuses: Record<PlannedWorkoutStatus, { label: string; color: string }> = {
+  planned: { label: 'Tervezett', color: 'blue' },
+  completed: { label: 'Teljesített', color: 'teal' },
+  missed: { label: 'Kihagyott', color: 'red' },
 };
 
 /** Kockázati kategóriák: magyar név és Mantine szín. */
@@ -25,6 +41,14 @@ export const alertSeverities: Record<'info' | 'warning' | 'critical', { label: s
   warning: { label: 'Figyelmeztetés', color: 'orange' },
   critical: { label: 'Kritikus', color: 'red' },
 };
+
+/**
+ * Dátum magyar formában (pl. „2026. 11. 23.”).
+ */
+export function formatDate(date: string): string {
+  const [year, month, day] = date.slice(0, 10).split('-');
+  return `${year}. ${month}. ${day}.`;
+}
 
 /**
  * Táv kilométerben, magyar formában (pl. „12,5 km”).
