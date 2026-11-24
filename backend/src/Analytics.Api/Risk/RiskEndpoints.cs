@@ -13,7 +13,7 @@ public static class RiskEndpoints
     /// </summary>
     public static void MapRiskEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/analytics/risk", GetAsync).RequireAuthorization(Policies.RunnerOrCoach);
+        app.MapGet("/api/analytics/risk", GetAsync).RequireAuthorization(Policies.RunnerOrCoach).Produces<RiskResponse>();
     }
 
     /// <summary>

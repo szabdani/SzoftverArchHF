@@ -13,8 +13,8 @@ public static class DashboardEndpoints
     /// </summary>
     public static void MapDashboardEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/analytics/dashboard", GetAsync).RequireAuthorization(Policies.RunnerOrCoach);
-        app.MapGet("/api/analytics/coach/runners", ListCoachRunnersAsync).RequireAuthorization(Policies.Coach);
+        app.MapGet("/api/analytics/dashboard", GetAsync).RequireAuthorization(Policies.RunnerOrCoach).Produces<DashboardResponse>().ProducesValidationProblem();
+        app.MapGet("/api/analytics/coach/runners", ListCoachRunnersAsync).RequireAuthorization(Policies.Coach).Produces<List<CoachRunnerSummary>>();
     }
 
     /// <summary>
