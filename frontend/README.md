@@ -18,6 +18,8 @@ A Vite az `/api` kéréseket a gatewayre (`http://localhost`) továbbítja. Bel�
 | `VITE_OIDC_AUTHORITY` | `http://localhost/auth/realms/futoedzes` |
 | `VITE_OIDC_CLIENT_ID` | `futoedzes-frontend` |
 
+A teljes rendszerrel együtt konténerben is fut: a `docker compose up --build` a felületet is felépíti (nginx), és a `http://localhost` címen szolgálja ki. A `npm run dev` csak a felület fejlesztéséhez kell.
+
 ## Parancsok
 
 | Parancs | Mit csinál |

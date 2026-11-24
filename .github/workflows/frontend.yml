@@ -27,3 +27,6 @@ jobs:
         run: npm test
       - name: Build
         run: npm run build
+      # A compose-ban futó image (nginx) is felépül, így a Dockerfile hibája is kiderül.
+      - name: Docker image
+        run: docker build -t futoedzes-frontend .
