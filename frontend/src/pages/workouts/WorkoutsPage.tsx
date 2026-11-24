@@ -16,9 +16,10 @@ const typeOptions = Object.entries(workoutTypeLabels).map(([value, label]) => ({
 
 /**
  * Edzésnapló (UC04): a futó edzései egy időszakban (alapból az utolsó 12 hét), típus szerint szűrve és
- * rendezve; innen lehet rögzíteni, módosítani és törölni (UC02, UC03).
+ * rendezve; innen lehet rögzíteni, módosítani és törölni (UC02, UC03). Az edző (runnerId, readOnly)
+ * csak megtekinti a hozzárendelt futóét.
  */
-export function WorkoutsPage() {
+export function WorkoutsPage({ runnerId, readOnly = false }: { runnerId?: string; readOnly?: boolean }) {
   const today = dayjs().format('YYYY-MM-DD');
   const [range, setRange] = useState<[string | null, string | null]>([dayjs().subtract(83, 'day').format('YYYY-MM-DD'), today]);
   const [type, setType] = useState<WorkoutType | null>(null);
@@ -28,8 +29,8 @@ export function WorkoutsPage() {
 
   const [from, to] = range;
   const query = useQuery({
-    queryKey: ['workouts', from, to],
-    queryFn: async () => (await getApiTrainingWorkouts({ query: { from: from!, to: to! }, throwOnError: true })).data,
+    queryKey: ['workouts', from, to, runnerId],
+    queryFn: async () => (await getApiTrainingWorkouts({ query: { runnerId, from: from!, to: to! }, throwOnError: true })).data,
     enabled: from !== null && to !== null,
   });
   const workouts = filterAndSortWorkouts(query.data ?? [], type, sort);
@@ -50,9 +51,11 @@ export function WorkoutsPage() {
     <Stack>
       <Group justify="space-between">
         <Title order={2}>Edzésnapló</Title>
-        <Button leftSection={<IconPlus size={16} />} onClick={() => setEditing('new')}>
-          Új edzés
-        </Button>
+        {!readOnly && (
+          <Button leftSection={<IconPlus size={16} />} onClick={() => setEditing('new')}>
+            Új edzés
+          </Button>
+        )}
       </Group>
 
       <Group align="flex-end">
@@ -99,14 +102,16 @@ export function WorkoutsPage() {
                   <Table.Td>{workout.rpe}</Table.Td>
                   <Table.Td>{workout.load}</Table.Td>
                   <Table.Td>
-                    <Group gap={4} wrap="nowrap">
-                      <ActionIcon variant="subtle" aria-label="Módosítás" onClick={() => setEditing(workout)}>
-                        <IconPencil size={16} />
-                      </ActionIcon>
-                      <ActionIcon variant="subtle" color="red" aria-label="Törlés" onClick={() => setDeleting(workout)}>
-                        <IconTrash size={16} />
-                      </ActionIcon>
-                    </Group>
+                    {!readOnly && (
+                      <Group gap={4} wrap="nowrap">
+                        <ActionIcon variant="subtle" aria-label="Módosítás" onClick={() => setEditing(workout)}>
+                          <IconPencil size={16} />
+                        </ActionIcon>
+                        <ActionIcon variant="subtle" color="red" aria-label="Törlés" onClick={() => setDeleting(workout)}>
+                          <IconTrash size={16} />
+                        </ActionIcon>
+                      </Group>
+                    )}
                   </Table.Td>
                 </Table.Tr>
               ))}
