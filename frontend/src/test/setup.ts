@@ -22,3 +22,10 @@ window.ResizeObserver ??= class {
   unobserve() {}
   disconnect() {}
 };
+
+// A Mantine Textarea a betűtípusok betöltésére is figyel (document.fonts), ami a jsdom-ban hiányzik.
+if (!('fonts' in document)) {
+  Object.defineProperty(document, 'fonts', {
+    value: { addEventListener: () => {}, removeEventListener: () => {}, ready: Promise.resolve() },
+  });
+}
