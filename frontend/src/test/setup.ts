@@ -29,3 +29,6 @@ if (!('fonts' in document)) {
     value: { addEventListener: () => {}, removeEventListener: () => {}, ready: Promise.resolve() },
   });
 }
+
+// A Mantine Select legördülője a kiválasztott elemhez görget.
+Element.prototype.scrollIntoView ??= () => {};
