@@ -17,6 +17,7 @@ docker compose up --build
 
 | Cím | Mi ez |
 |---|---|
+| http://localhost | Webes felület (belépés a lenti felhasználókkal) |
 | http://localhost/api/analytics | Analytics API (terhelés, kockázati pontszám) |
 | http://localhost/api/training | Training API (edzések) |
 | http://localhost/api/identity | Identity API (edzői meghívások, kapcsolatok) |
@@ -39,7 +40,7 @@ A `futoedzes` realm induláskor importálódik ([infra/keycloak/futoedzes-realm.
 
 ### Demóadatok (UC18)
 
-Az admin a `POST /api/identity/admin/demo` hívással négy szimulált futót kapcsol a `coach@futoedzes.local` edzőhöz, és mindegyiknek 12 hét edzésadatot, edzéstervet és célt generál. A `DELETE` ugyanezen a címen törli őket. Mind a négy be is tud lépni (`Demo1234`):
+Az admin a felületen (Felhasználók → Demóadatok) vagy a `POST /api/identity/admin/demo` hívással négy szimulált futót kapcsol a `coach@futoedzes.local` edzőhöz, és mindegyiknek 12 hét edzésadatot, edzéstervet és célt generál. A `DELETE` ugyanezen a címen törli őket. Mind a négy be is tud lépni (`Demo1234`):
 
 | Felhasználó | Minta |
 |---|---|

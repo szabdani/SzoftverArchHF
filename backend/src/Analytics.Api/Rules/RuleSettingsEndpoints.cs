@@ -14,8 +14,8 @@ public static class RuleSettingsEndpoints
     {
         var group = app.MapGroup("/api/analytics/admin/rules").RequireAuthorization(Policies.Admin);
 
-        group.MapGet("/", GetAsync);
-        group.MapPut("/", UpdateAsync);
+        group.MapGet("/", GetAsync).Produces<RuleSettingsDto>();
+        group.MapPut("/", UpdateAsync).Produces<RuleSettingsDto>().ProducesValidationProblem();
     }
 
     /// <summary>

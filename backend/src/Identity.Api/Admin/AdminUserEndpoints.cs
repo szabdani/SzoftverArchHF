@@ -16,9 +16,9 @@ public static class AdminUserEndpoints
     {
         var group = app.MapGroup("/api/identity/admin/users").RequireAuthorization(Policies.Admin);
 
-        group.MapGet("/", SearchAsync);
-        group.MapPut("/{id:guid}/role", SetRoleAsync);
-        group.MapPut("/{id:guid}/enabled", SetEnabledAsync);
+        group.MapGet("/", SearchAsync).Produces<List<AdminUserResponse>>();
+        group.MapPut("/{id:guid}/role", SetRoleAsync).Produces(StatusCodes.Status204NoContent).ProducesValidationProblem();
+        group.MapPut("/{id:guid}/enabled", SetEnabledAsync).Produces(StatusCodes.Status204NoContent).ProducesValidationProblem();
     }
 
     /// <summary>

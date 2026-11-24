@@ -17,10 +17,10 @@ public static class GoalEndpoints
         var group = app.MapGroup("/api/training/goals");
 
         // A futó kezeli a céljait, az edző csak megtekinti (spec 3.1).
-        group.MapGet("/", ListAsync).RequireAuthorization(Policies.RunnerOrCoach);
-        group.MapGet("/active", GetActiveAsync).RequireAuthorization(Policies.RunnerOrCoach);
-        group.MapPost("/", CreateAsync).RequireAuthorization(Policies.Runner);
-        group.MapPut("/{id:guid}", UpdateAsync).RequireAuthorization(Policies.Runner);
+        group.MapGet("/", ListAsync).RequireAuthorization(Policies.RunnerOrCoach).Produces<List<GoalResponse>>();
+        group.MapGet("/active", GetActiveAsync).RequireAuthorization(Policies.RunnerOrCoach).Produces<ActiveGoalResponse>();
+        group.MapPost("/", CreateAsync).RequireAuthorization(Policies.Runner).Produces<GoalResponse>().ProducesValidationProblem();
+        group.MapPut("/{id:guid}", UpdateAsync).RequireAuthorization(Policies.Runner).Produces<GoalResponse>().ProducesValidationProblem();
     }
 
     /// <summary>

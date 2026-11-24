@@ -13,7 +13,7 @@ public static class RecommendationEndpoints
     /// </summary>
     public static void MapRecommendationEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/analytics/recommendation", GetAsync).RequireAuthorization(Policies.RunnerOrCoach);
+        app.MapGet("/api/analytics/recommendation", GetAsync).RequireAuthorization(Policies.RunnerOrCoach).Produces<Recommendation>();
     }
 
     /// <summary>

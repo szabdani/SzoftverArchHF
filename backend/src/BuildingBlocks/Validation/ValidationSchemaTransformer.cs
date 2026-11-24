@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Reflection;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization.Metadata;
 using Microsoft.AspNetCore.OpenApi;
@@ -8,8 +9,8 @@ namespace BuildingBlocks.Validation;
 
 /// <summary>
 /// Az OpenAPI sémát a kérés-DTO-k validációs attribútumaihoz igazítja, hogy a frontendnek generált séma
-/// azt fogadja el, amit a szerver: a [Required] és a nem-nullable értéktípusú mező kötelező és nem lehet
-/// null, a többi opcionális; az [EmailAddress] mező e-mail formátumú, az [AllowedValues] mező felsorolás;
+/// azt fogadja el, amit a szerver: a [Required] és a nem-nullable (érték- vagy referencia-) típusú mező
+/// kötelező és nem lehet null, a többi opcionális; az [EmailAddress] mező e-mail formátumú, az [AllowedValues] mező felsorolás;
 /// az enumok értékei között nincs null.
 /// </summary>
 public static class ValidationSchemaTransformer
@@ -46,14 +47,20 @@ public static class ValidationSchemaTransformer
 
             var attributes = property.AttributeProvider;
 
-            // Kötelező a [Required] és a nem-nullable értéktípusú mező (azt a szerver is mindig várja);
-            // a generátor egyébként minden konstruktor-paramétert kötelezőnek venne.
-            var isValueType = property.PropertyType.IsValueType && Nullable.GetUnderlyingType(property.PropertyType) is null;
-            if (isValueType || attributes?.IsDefined(typeof(RequiredAttribute), inherit: true) == true)
+            // Kötelező a [Required] és a nem-nullable típusú mező (a kérésekben ezt a szerver is mindig várja,
+            // a válaszokban mindig benne van); a generátor egyébként minden konstruktor-paramétert kötelezőnek venne.
+            var required = attributes?.GetCustomAttributes(typeof(RequiredAttribute), inherit: true).FirstOrDefault() as RequiredAttribute;
+            if (IsNonNullable(property) || required is not null)
             {
                 schema.Required ??= new HashSet<string>();
                 schema.Required.Add(property.Name);
                 schema.Properties[property.Name] = WithoutNull(propertySchema);
+
+                // A [Required] az üres szöveget is elutasítja; a sémában ezt a legalább 1 hossz fejezi ki.
+                if (required is { AllowEmptyStrings: false } && property.PropertyType == typeof(string) && propertySchema is OpenApiSchema stringSchema)
+                {
+                    stringSchema.MinLength ??= 1;
+                }
             }
             else
             {
@@ -102,6 +109,21 @@ public static class ValidationSchemaTransformer
         }
 
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Nem-nullable-e a mező: értéktípusnál a Nullable&lt;T&gt; hiánya, referencia-típusnál a C# nullable
+    /// annotáció (pl. string vagy string?) dönt.
+    /// </summary>
+    private static bool IsNonNullable(JsonPropertyInfo property)
+    {
+        if (property.PropertyType.IsValueType)
+        {
+            return Nullable.GetUnderlyingType(property.PropertyType) is null;
+        }
+
+        return property.AttributeProvider is PropertyInfo info
+            && new NullabilityInfoContext().Create(info).ReadState == NullabilityState.NotNull;
     }
 
     /// <summary>
