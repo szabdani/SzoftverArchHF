@@ -12,26 +12,27 @@ import { SummaryCards } from './SummaryCards';
 
 /**
  * A futó terhelési dashboardja (UC06): heti/havi összesítő, kockázati pontszám (UC15), javasolt
- * következő edzés (UC10), nyugtázatlan figyelmeztetések (UC09) és a 12 hetes diagramok.
+ * következő edzés (UC10), nyugtázatlan figyelmeztetések (UC09) és a 12 hetes diagramok. Az edző a
+ * runnerId megadásával a hozzárendelt futóét látja.
  */
-export function DashboardPage() {
+export function DashboardPage({ runnerId }: { runnerId?: string }) {
   const [period, setPeriod] = useState<DashboardPeriod>('week');
 
   const dashboard = useQuery({
-    queryKey: ['dashboard', period],
-    queryFn: async () => (await getApiAnalyticsDashboard({ query: { period }, throwOnError: true })).data,
+    queryKey: ['dashboard', period, runnerId],
+    queryFn: async () => (await getApiAnalyticsDashboard({ query: { period, runnerId }, throwOnError: true })).data,
   });
   const risk = useQuery({
-    queryKey: ['risk'],
-    queryFn: async () => (await getApiAnalyticsRisk({ throwOnError: true })).data,
+    queryKey: ['risk', runnerId],
+    queryFn: async () => (await getApiAnalyticsRisk({ query: { runnerId }, throwOnError: true })).data,
   });
   const recommendation = useQuery({
-    queryKey: ['recommendation'],
-    queryFn: async () => (await getApiAnalyticsRecommendation({ throwOnError: true })).data,
+    queryKey: ['recommendation', runnerId],
+    queryFn: async () => (await getApiAnalyticsRecommendation({ query: { runnerId }, throwOnError: true })).data,
   });
   const alerts = useQuery({
-    queryKey: ['alerts', false],
-    queryFn: async () => (await getApiAnalyticsAlerts({ query: { includeAcknowledged: false }, throwOnError: true })).data,
+    queryKey: ['alerts', false, runnerId],
+    queryFn: async () => (await getApiAnalyticsAlerts({ query: { includeAcknowledged: false, runnerId }, throwOnError: true })).data,
   });
 
   const error = dashboard.error ?? risk.error ?? recommendation.error ?? alerts.error;

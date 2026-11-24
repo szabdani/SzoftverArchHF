@@ -43,7 +43,7 @@ export function AppLayout() {
             to={item.to}
             label={item.label}
             leftSection={<item.icon size={18} />}
-            active={location.pathname === item.to}
+            active={location.pathname === item.to || (item.to !== '/' && location.pathname.startsWith(`${item.to}/`))}
             onClick={close}
           />
         ))}

@@ -1,6 +1,8 @@
 import { createBrowserRouter } from 'react-router';
 import { AlertsPage } from '../pages/alerts/AlertsPage';
 import { CalendarPage } from '../pages/calendar/CalendarPage';
+import { CoachOverviewPage } from '../pages/coach/CoachOverviewPage';
+import { CoachRunnerPage } from '../pages/coach/CoachRunnerPage';
 import { CoachesPage } from '../pages/coaches/CoachesPage';
 import { GoalsPage } from '../pages/goals/GoalsPage';
 import { NotReadyPage } from '../pages/NotReadyPage';
@@ -27,7 +29,8 @@ export const router = createBrowserRouter([
       { path: 'goals', element: <GoalsPage /> },
       { path: 'alerts', element: <AlertsPage /> },
       { path: 'coaches', element: <CoachesPage /> },
-      { path: 'coach', element: <NotReadyPage title="Futóim" /> },
+      { path: 'coach', element: <CoachOverviewPage /> },
+      { path: 'coach/runners/:runnerId', element: <CoachRunnerPage /> },
       { path: 'admin/users', element: <NotReadyPage title="Felhasználók" /> },
       { path: 'admin/rules', element: <NotReadyPage title="Szabályok" /> },
       { path: '*', element: <NotReadyPage title="Az oldal nem található" /> },
