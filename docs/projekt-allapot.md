@@ -8,9 +8,10 @@
 
 - **A feladat:** BME Szoftverarchitektúrák házi feladat, „Futóedzés-tervező és terhelésfigyelő”.
 - **A követelmények:** [SzoftArchHF_Futoedzes_Specifikacio.pdf](SzoftArchHF_Futoedzes_Specifikacio.pdf), benne 20 use-case (UC01–UC20). A kódban a `spec 3.x` hivatkozások ennek a fejezeteire mutatnak.
-- **A backend kész,** mind a 20 use-case-zel, és a `main`-ben van.
-- **A frontend kész** mindhárom szerepkörre (futó, edző, admin), de **még nyitott, egymásra épülő PR-okban van** (lásd a 3. fejezetet).
-- **Docker Compose:** egy paranccsal indul a teljes rendszer, a frontenddel együtt (ez is nyitott PR-ban van).
+- **A backend kész,** mind a 20 use-case-zel.
+- **A frontend kész** mindhárom szerepkörre (futó, edző, admin).
+- **Docker Compose:** egy paranccsal indul a teljes rendszer, a frontenddel együtt.
+- **Minden a `main`-ben van** (PR #1–#22, merge-elve 2026-11-24-én); nyitott PR nincs.
 - **A legfontosabb hiány: a rendszer még egyszer sem futott együtt élőben** (Docker + böngésző + Keycloak). Minden ellenőrzés build, lint, egységteszt és CI volt. Ezért kiemelten fontos a 8. fejezet.
 
 ## 2. Mi alapján haladtunk
@@ -59,21 +60,22 @@ Ahol a spec nem egyértelmű, ezek a döntések születtek. Ne írd át őket eg
 
 ## 3. Hol van a kód (ágak, PR-ok)
 
-- **`main`:** a teljes backend, az infrastruktúra és a CI (PR #1–#13, merge-elve).
-- **Nyitott, egymásra épülő PR-ok.** Mindegyik az előző ágára épül, ezért **sorrendben kell merge-elni**. Ha egy ág merge után törlődik, a GitHub a következő PR bázisát magától átállítja.
+**Minden a `main`-ben van.** A régi `feature/...` ágak megmaradtak a GitHubon, de már nem kellenek. Új munkát a `main`-ről induló új `feature/...` ágon kell kezdeni.
 
-| Sorrend | PR | Ág | Tartalom |
-|---|---|---|---|
-| 1 | #14 | `feature/api-response-types` | Backend: válaszsémák az OpenAPI-ban (a generált frontend kliensnek kell) |
-| 2 | #15 | `feature/frontend-foundation` | Frontend alapok: Mantine, Keycloak-belépés, generált API-kliens, menü, CI |
-| 3 | #16 | `feature/frontend-workouts` | Edzésnapló (UC02–UC04, UC08) |
-| 4 | #17 | `feature/frontend-dashboard` | Dashboard, diagramok, kockázat, javaslat, figyelmeztetések (UC06, UC09, UC10, UC15) |
-| 5 | #18 | `feature/frontend-runner-plans` | Célok, naptár húzással, edzéstervek, „Edzőim” (UC05, UC07, UC11, UC13) |
-| 6 | #19 | `feature/frontend-coach` | Edzői nézetek (UC12, UC14 + a futó adatai) |
-| 7 | #20 | `feature/frontend-admin` | Admin nézetek (UC16–UC18) |
-| 8 | #21 | `feature/frontend-container` | Frontend konténer (nginx), Traefik a `/`-en, Docker image a CI-ban |
+A PR-ok, ha egy döntés hátterét kell visszakeresni (a PR-leírásokban részletes indoklás van):
 
-**A legfrissebb, teljes kód a `feature/frontend-container` ágon van**, ez tartalmazza az összes alatta lévőt. Ha a PR-ok még nincsenek merge-elve, kipróbáláshoz ezt az ágat kell kivenni.
+| PR | Tartalom |
+|---|---|
+| #1–#13 | Backend: infrastruktúra, edzések, edző–futó kapcsolat, célok, tervek, terhelés és kockázat, figyelmeztetések, javaslat, dashboard, szabályok, felhasználók, demóadatok, közös validációs séma |
+| #14 | Backend: válaszsémák az OpenAPI-ban (a generált frontend kliensnek kell) |
+| #15 | Frontend alapok: Mantine, Keycloak-belépés, generált API-kliens, menü, CI |
+| #16 | Edzésnapló (UC02–UC04, UC08) |
+| #17 | Dashboard, diagramok, kockázat, javaslat, figyelmeztetések (UC06, UC09, UC10, UC15) |
+| #18 | Célok, naptár húzással, edzéstervek, „Edzőim” (UC05, UC07, UC11, UC13) |
+| #19 | Edzői nézetek (UC12, UC14 + a futó adatai) |
+| #20 | Admin nézetek (UC16–UC18) |
+| #21 | Frontend konténer (nginx), Traefik a `/`-en, Docker image a CI-ban |
+| #22 | Ez a dokumentum |
 
 ### Use-case-ek lefedése
 
