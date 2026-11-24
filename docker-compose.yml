@@ -188,6 +188,18 @@ services:
       - traefik.http.routers.identity.entrypoints=web
       - traefik.http.services.identity.loadbalancer.server.port=8080
 
+  # A webes felület (React, nginx) a http://localhost címen. A legalacsonyabb prioritású útvonal,
+  # így az /api és az /auth kérések továbbra is a saját szolgáltatásukhoz mennek.
+  frontend:
+    build:
+      context: ./frontend
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.frontend.rule=PathPrefix(`/`)
+      - traefik.http.routers.frontend.priority=1
+      - traefik.http.routers.frontend.entrypoints=web
+      - traefik.http.services.frontend.loadbalancer.server.port=80
+
 volumes:
   analytics-db-data:
   keycloak-db-data:
