@@ -12,7 +12,7 @@
 - **A frontend kész** mindhárom szerepkörre (futó, edző, admin).
 - **Docker Compose:** egy paranccsal indul a teljes rendszer, a frontenddel együtt.
 - **Minden a `main`-ben van** (PR #1–#22, merge-elve 2026-11-24-én); nyitott PR nincs.
-- **Az élő, böngészős QA lezárult (2026-11-25):** a rendszer együtt futott Dockerben (Traefik + Keycloak + RabbitMQ + 3 adatbázis + 3 API + frontend), mind a 20 use-case és a jogosultsági modell élőben tesztelve, a talált hibák javítva (külön PR-okban, lásd 7.6). Playwright E2E tesztek is készültek, zölden futnak. A részletek a 7.5 fejezetben; a megmaradt pontok környezeti korlátok (iOS/Safari, valódi telefonos belépés) és a még hiányzó backend integrációs tesztek (Testcontainers).
+- **Az élő, böngészős QA lezárult (2026-11-25):** a rendszer együtt futott Dockerben (Traefik + Keycloak + RabbitMQ + 3 adatbázis + 3 API + frontend), mind a 20 use-case és a jogosultsági modell élőben tesztelve, a talált hibák javítva (külön PR-okban, lásd a 3. fejezet PR-táblázatát). Playwright E2E tesztek is készültek, zölden futnak. A részletek a 8. fejezetben; a megmaradt pontok környezeti korlátok (iOS/Safari, valódi telefonos belépés) és a még hiányzó backend integrációs tesztek (Testcontainers).
 
 ## 2. Mi alapján haladtunk
 
@@ -60,7 +60,7 @@ Ahol a spec nem egyértelmű, ezek a döntések születtek. Ne írd át őket eg
 
 ## 3. Hol van a kód (ágak, PR-ok)
 
-**Minden a `main`-ben van.** A régi `feature/...` ágak megmaradtak a GitHubon, de már nem kellenek. Új munkát a `main`-ről induló új `feature/...` ágon kell kezdeni.
+**Minden a `main`-ben van** (a #26 E2E PR mergelésével együtt). A régi `feature/...` ágak megmaradtak a GitHubon, de már nem kellenek. Új munkát a `main`-ről induló új `feature/...` ágon kell kezdeni.
 
 A PR-ok, ha egy döntés hátterét kell visszakeresni (a PR-leírásokban részletes indoklás van):
 
@@ -75,7 +75,11 @@ A PR-ok, ha egy döntés hátterét kell visszakeresni (a PR-leírásokban rész
 | #19 | Edzői nézetek (UC12, UC14 + a futó adatai) |
 | #20 | Admin nézetek (UC16–UC18) |
 | #21 | Frontend konténer (nginx), Traefik a `/`-en, Docker image a CI-ban |
-| #22 | Ez a dokumentum |
+| #22 | Projektállapot dokumentum |
+| #23 | QA: a futó-oldali űrlapok beviteli finomításai – közös `DurationInput` (óra/perc/mp), a számmezők határsértése validációs hibaüzenetként, a célidő 10 órás felső határa (backend + séma + kliens), edzés kitöltése a tervezett edzésből (UC02/UC05/UC08/UC11) |
+| #24 | QA: edzői folyamat; javítás: badge + értesítés a futónak a függő edzői meghívóról (UC12/UC13/UC14) |
+| #25 | QA: admin folyamat; javítások: a Keycloak Admin API 401 megoldása a `kc-admin-api` scope-pal, fix felhasználói ID-k a realmben, szerepkörváltás-értesítés (UC16–UC18) |
+| #26 | QA: Playwright E2E tesztek (token-injektálásos belépés) és CI-job |
 
 ### Use-case-ek lefedése
 
@@ -164,27 +168,28 @@ docker compose up --build   # felület: http://localhost
 ```
 
 **Tesztek a mostani állapotban:**
-- backend: 195 teszteset;
-- frontend: 53 teszt;
-- mind zöld, a CI is.
+- backend: 196 egységteszteset;
+- frontend: 53 egységteszt + 6 Playwright E2E teszt;
+- mind zöld, a CI is (az E2E a teljes rendszer ellen fut, lásd a 9. fejezetet).
 
 ## 7. Ami nincs kész, vagy ismert hiány
 
-1. **Nincs élő próba:** a rendszer még nem futott együtt Dockerben és böngészőben (lásd a 8. fejezetet).
-2. **Nincsenek integrációs és E2E tesztek.**
-   - A backend tesztjei egységtesztek, adatbázis és broker nélkül.
-   - A frontend tesztjei mockolt API-val futnak.
-   - A szolgáltatások együttműködését (RabbitMQ, PostgreSQL, Keycloak) semmi nem teszteli automatikusan.
-   - Javaslat: Testcontainers a backendhez (pl. edzés mentése → esemény → az Analytics újraszámol), Playwright a fő felhasználói folyamatokhoz.
-3. **Valódi e-mail nem megy ki** a meghívásnál (lásd a 2. fejezetet). Ha a csapat igényli: Keycloak SMTP, vagy MailKit + egy Mailpit konténer.
-4. **Reszponzivitás és böngészők:** a spec szerint Chrome, Firefox, Safari és Edge, asztalon és mobilon. Ez nincs ellenőrizve.
-5. **Kisebb hiányok:**
+A QA (élő, böngészős tesztelés) lezárult – az élő próba és a reszponzivitás-ellenőrzés megtörtént, lásd a 9. fejezetet. Ami még nyitott:
+
+1. **Nincsenek backend integrációs tesztek (Testcontainers).**
+   - A backend tesztjei egységtesztek, adatbázis és broker nélkül; a frontend egységtesztjei mockolt API-val futnak.
+   - A szolgáltatások együttműködését valódi RabbitMQ/PostgreSQL ellen semmi nem teszteli automatikusan. (Böngészős **E2E viszont már van**, Playwrighttal – lásd a 9. fejezetet.)
+   - Javaslat: Testcontainers a backendhez, pl. edzés mentése → esemény → az Analytics újraszámol.
+2. **Valódi e-mail nem megy ki** a meghívásnál (lásd a 2. fejezetet). Ha a csapat igényli: Keycloak SMTP, vagy MailKit + egy Mailpit konténer.
+3. **Böngésző-/eszközkorlátok:** Chrome, Firefox, Edge (asztal + DevTools mobil nézet) rendben. A **Safari (macOS/iOS)** és a **valódi telefonos belépés** nincs lefedve – ez környezeti korlát (Windows gép; a dev-config `localhost`-ra fixált Keycloak-hostneve), nem a felület hibája. Részletek a 8. fejezet (QA) reszponzivitás-szakaszában.
+4. **Kisebb hiányok:**
    - az edzőnek nincs összesített figyelmeztetés-listája az összes futóról, csak futónként (a futó oldalán);
    - a frontend egyetlen nagy JS-csomag (a build figyelmeztet az 500 kB fölötti méretre), kódfelosztás nincs.
+5. **Nyitott terméki kérdés – függő meghívók:** az edző nem létező e-mail címre is küldhet meghívót, ami időkorlát nélkül „függőben” marad, és nem vonható vissza. Eldöntendő, kell-e visszavonás/lejárat (lásd a 8. fejezet edzői szakaszát).
 
-## 7.5 Élő QA tesztelés – lezárva (2026-11-25)
+## 8. Élő QA tesztelés – lezárva (2026-11-25)
 
-A rendszert `docker compose up --build` után böngészőből, a `http://localhost` címen végigteszteltük, a 8. fejezet checklistje szerint. Mind a 20 use-case és a jogosultsági modell élőben igazolt; a talált hibák javítva (lásd az „Elvégzett QA-javítások” részt és a 7.6 PR-összefoglalót). Automata E2E (Playwright) is készült. A megmaradt pontok környezeti korlátok (iOS/Safari, valódi telefonos belépés) és a még hiányzó backend integrációs tesztek (Testcontainers).
+A rendszert `docker compose up --build` után böngészőből, a `http://localhost` címen végigteszteltük, a 9. fejezet checklistje szerint. Mind a 20 use-case és a jogosultsági modell élőben igazolt; a talált hibák javítva (lásd az „Elvégzett QA-javítások” részt és a 3. fejezet PR-táblázatát). Automata E2E (Playwright) is készült. A megmaradt pontok környezeti korlátok (iOS/Safari, valódi telefonos belépés) és a még hiányzó backend integrációs tesztek (Testcontainers).
 
 ### Indulás és infrastruktúra – rendben
 - Mind a 11 konténer elindul, az API-k lefuttatják a migrációkat, a Keycloak importálja a `futoedzes` realmet, a Traefik jól irányít (`/`, `/api/*`, `/auth`).
@@ -269,36 +274,23 @@ A `frontend/e2e/` alatt Playwright E2E tesztek futnak a **futó rendszer** ellen
 
 > **Teszt-higiénia:** ha a Keycloak DB-t eldobod (pl. realm-újraimporthoz), a konzisztencia érdekében dobd el az összes adat-volume-ot is együtt: `docker compose down -v && docker compose up -d --build`. Így nem marad régi felhasználói ID-ra hivatkozó, elárvult adat a Training/Analytics/Identity adatbázisokban.
 
-## 7.6 A QA-munka pull requestjei
+## 9. Tesztelési checklist (elvégezve)
 
-A QA (élő tesztelés + a talált hibák javítása) külön `feature/qa-*` ágakon, use-case-témánként, mindegyik önállóan review-zható PR-ként készült. A `main`-be mergelve:
-
-| PR | Ág | Tartalom |
-|---|---|---|
-| #23 | `feature/qa-workout-form` | UC02/UC05/UC08/UC11: a futó-oldali űrlapok beviteli finomításai – közös `DurationInput` (óra/perc/mp), a számmezők határsértése validációs hibaüzenetként (nem néma klamp), a célidő felső határa 10 órára egységesítve (backend + séma + kliens), és az edzés-űrlap kitöltése a kiválasztott tervezett edzésből. |
-| #24 | `feature/qa-coach` | UC12/UC13/UC14: az edzői folyamat tesztelése; javítás: a futó belépéskor badge + értesítés a függő edzői meghívóról (`usePendingInvitations`). |
-| #25 | `feature/qa-admin` | UC16–UC18: az admin folyamat tesztelése; javítások: a Keycloak Admin API 401 megoldása a `kc-admin-api` client scope-pal, fix felhasználói ID-k a realmben, és szerepkörváltás-értesítés (`useRoleChangeNotice`). A docs itt kapta meg a jogosultsági API-tesztek, az UC19/UC20 és a reszponzivitás eredményeit. |
-| #26 (nyitott) | `feature/qa-e2e` | Playwright E2E tesztek a futó rendszer ellen (token-injektálásos belépés), CI-jobbal. |
-
-A korábbi #1–#22 PR-ok a backend (infrastruktúra, use-case-ek, közös validációs séma) és a frontend (három szerepkör felülete, konténer) munkái, valamint a projektállapot-dokumentum – ezek a QA előtt készültek.
-
-## 8. Mit kell mindenképpen tesztelni
-
-Élőben, `docker compose up --build` után, a `http://localhost` címen. A felhasználók a README-ben vannak.
+Élőben, `docker compose up --build` után, a `http://localhost` címen. A felhasználók a README-ben vannak. A 2026-11-25-i QA során a lenti pontok ki lettek pipálva; a megjegyzések a tapasztalt viselkedést rögzítik. A fennmaradó környezeti korlátok a 7. fejezetben vannak.
 
 ### Indulás és infrastruktúra
 
-- [ ] Minden konténer elindul. Az API-k lefuttatják a migrációkat, a Keycloak importálja a `futoedzes` realmet.
-- [ ] Az `Europe/Budapest` időzóna elérhető az API-konténerekben. Ha hiányzik, az első dátumfüggő hívás kivétellel elszáll (pl. edzés mentése).
-- [ ] A Traefik jól irányít: `/` → frontend, `/api/*` → a megfelelő API, `/auth` → Keycloak.
-- [ ] Mély link frissítése is működik (pl. `/coach/runners/<id>` újratöltése): ezt az nginx SPA fallbackje oldja meg.
+- [x] Minden konténer elindul. Az API-k lefuttatják a migrációkat, a Keycloak importálja a `futoedzes` realmet. *(2026-11-25: mind a 11 konténer felállt, a migrációk lefutottak, a realm importálódott.)*
+- [x] Az `Europe/Budapest` időzóna elérhető az API-konténerekben. Ha hiányzik, az első dátumfüggő hívás kivétellel elszáll (pl. edzés mentése). *(2026-11-25: `TZ_OK`, az időzóna megvan; az edzésmentés nem száll el.)*
+- [x] A Traefik jól irányít: `/` → frontend, `/api/*` → a megfelelő API, `/auth` → Keycloak. *(2026-11-25: rendben.)*
+- [x] Mély link frissítése is működik (pl. `/coach/runners/<id>` újratöltése): ezt az nginx SPA fallbackje oldja meg. *(2026-11-25: F5 után is betölt.)*
 
 ### Bejelentkezés (UC01)
 
-- [ ] A belépés és a kilépés működik a `http://localhost` címen (konténer) és a `http://localhost:5173` címen is (`npm run dev`).
-- [ ] Regisztráció: új felhasználó → `runner` szerepkör → a futói menü jelenik meg.
-- [ ] 5 percnél hosszabb munkamenet: a Keycloak access tokenje alapból kb. 5 percig él, a frontend csendben frissíti. Az API-hívások ezután is működjenek, kidobás nélkül.
-- [ ] Szerepkörváltás után (admin → edző lesz valaki) mikor látszik az új menü: a token frissítése után vagy csak újrabelépéskor?
+- [x] A belépés és a kilépés működik a `http://localhost` címen (konténer). *(2026-11-25: rendben mindhárom szerepkörrel.)* A `http://localhost:5173` (`npm run dev`) fejlesztői címet külön nem próbáltuk; a Vite dev-szerver az `/api`-t a gatewayre proxyzza, de ez nincs élőben ellenőrizve.
+- [x] Regisztráció: új felhasználó → `runner` szerepkör → a futói menü jelenik meg. *(2026-11-25: új fiók regisztrálva, futó szerepkört kapott.)*
+- [x] 5 percnél hosszabb munkamenet: a Keycloak access tokenje alapból kb. 5 percig él, a frontend csendben frissíti. Az API-hívások ezután is működjenek, kidobás nélkül. *(2026-11-25: a token-frissítés után is működött, kidobás nélkül.)*
+- [x] Szerepkörváltás után (admin → edző lesz valaki) mikor látszik az új menü: a token frissítése után vagy csak újrabelépéskor? *(2026-11-25: a csendes token-frissítés után néhány percen belül látszik az új menü, teljes újrabelépés nélkül; a felhasználó értesítést is kap a szerepkörváltásról – lásd a 8. fejezetet.)*
 
 ### Eseményvezérelt frissülés (a legkockázatosabb pont)
 
@@ -312,7 +304,7 @@ A korábbi #1–#22 PR-ok a backend (infrastruktúra, use-case-ek, közös valid
 - [x] Célok: egy aktív cél lehet, az újtól a régi archiválódik; látszik a hátralévő hetek száma.
 - [x] Naptár: havi és heti nézet; a tervezett, teljesített és kihagyott edzés eltérő jelöléssel.
   - **Húzás:** a terv időszakán belül mentődik, kívül hibaüzenettel visszaugrik. *(2026-11-25: a terv időszakán kívülre húzva visszaugrik – rendben.)*
-  - Mobilon érintéssel: a DevTools eszköznézetében kipróbálva; valódi iOS/Safari eszközön nem (környezeti korlát, lásd a 7.5 reszponzivitás-szakaszt).
+  - Mobilon érintéssel: a DevTools eszköznézetében kipróbálva; valódi iOS/Safari eszközön nem (környezeti korlát, lásd a 8. fejezet reszponzivitás-szakaszát).
 - [x] Kihagyott edzés (UC19): egy múltbeli, nem teljesített tervezett edzés legkésőbb egy órán belül „kihagyott” lesz; hetente legalább 2 esetén figyelmeztetés jön. *(2026-11-25: `restart training-api` → a job azonnal lefut, a naptárban pirosak, 2+ kihagyásnál figyelmeztetés; idempotens.)*
 - [x] Figyelmeztetés nyugtázása; ugyanaz a szabály ugyanazon a héten nem jön újra. *(2026-11-25: nyugtázás, „nyugtázottak is” kapcsoló és heti dedup is a spec szerint.)*
 
@@ -324,7 +316,7 @@ A korábbi #1–#22 PR-ok a backend (infrastruktúra, use-case-ek, közös valid
 
 ### Admin
 
-- [x] Felhasználó keresése, szerepkör módosítása, letiltás. A letiltott felhasználó nem tud belépni. A saját sor nem módosítható. *(2026-11-25: mind rendben; a szerepkörváltásról a felhasználó értesítést kap, lásd a 7.5 szakaszt.)*
+- [x] Felhasználó keresése, szerepkör módosítása, letiltás. A letiltott felhasználó nem tud belépni. A saját sor nem módosítható. *(2026-11-25: mind rendben; a szerepkörváltásról a felhasználó értesítést kap, lásd a 8. fejezetet.)*
 - [x] Szabályok: egy küszöb módosítása után a pontszámok azonnal frissülnek; a kikapcsolt szabály nem ad pontot, és nem küld figyelmeztetést. *(2026-11-25: a min/max korlátok és a ki-/bekapcsolás is működik.)*
 - [x] Demóadatok:
   - a létrehozás után a `coach@futoedzes.local` „Futóim” listájában négy futó jelenik meg, eltérő kockázattal (a `demo-spike` magas);
@@ -333,7 +325,7 @@ A korábbi #1–#22 PR-ok a backend (infrastruktúra, use-case-ek, közös valid
 
 ### Jogosultság (közvetlen API-hívásokkal is)
 
-Token kérése: lásd a README-t. *(2026-11-25: szerveroldalon ellenőrizve, lásd a 7.5 „Jogosultság közvetlen API-hívásokkal” szakaszt.)*
+Token kérése: lásd a README-t. *(2026-11-25: szerveroldalon ellenőrizve, lásd a 8. fejezet „Jogosultság közvetlen API-hívásokkal” szakaszát.)*
 
 - [x] Az edző nem hozzárendelt futó adatait nem kapja meg (idegen ID → 403; hozzárendelt → 200).
 - [x] Az edző nem módosíthatja a futó edzéseit (az edzés-módosító végpontok `Runner` policy-vel védettek).
@@ -342,4 +334,4 @@ Token kérése: lásd a README-t. *(2026-11-25: szerveroldalon ellenőrizve, lá
 
 ### Felület
 
-- [x] Chrome, Firefox, Edge, asztalon és mobil (DevTools) szélességben – rendben. Safari (macOS/iOS) és valódi telefonos belépés: környezeti korlát, lásd a 7.5 reszponzivitás-szakaszt.
+- [x] Chrome, Firefox, Edge, asztalon és mobil (DevTools) szélességben – rendben. Safari (macOS/iOS) és valódi telefonos belépés: környezeti korlát, lásd a 8. fejezet reszponzivitás-szakaszát.
