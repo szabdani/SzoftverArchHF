@@ -95,11 +95,7 @@
       "standardFlowEnabled": false,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": true,
-      "fullScopeAllowed": true,
-      "attributes": {
-        "client.use.lightweight.access.token.enabled": "false"
-      },
-      "defaultClientScopes": ["basic", "roles"]
+      "defaultClientScopes": ["basic", "roles", "kc-admin-api"]
     }
   ],
   "users": [
