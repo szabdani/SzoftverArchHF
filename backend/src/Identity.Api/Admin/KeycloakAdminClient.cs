@@ -112,27 +112,9 @@ public class KeycloakAdminClient(HttpClient http, IOptions<KeycloakAdminOptions>
     }
 
     /// <summary>
-    /// Kérés a realm Admin API-jára a service account tokenjével. A service account token rövid életű,
-    /// ezért ha a megjegyzett tokennel 401-et kapunk, egyszer frissítjük és újrapróbáljuk a kérést.
+    /// Kérés a realm Admin API-jára a service account tokenjével.
     /// </summary>
     private async Task<HttpResponseMessage> SendAsync(HttpMethod method, string path, object? body, CancellationToken ct)
-    {
-        var response = await SendOnceAsync(method, path, body, ct);
-        if (response.StatusCode != HttpStatusCode.Unauthorized)
-        {
-            return response;
-        }
-
-        // A megjegyzett token elévült vagy érvénytelen: eldobjuk, és friss tokennel még egyszer próbáljuk.
-        response.Dispose();
-        accessToken = null;
-        return await SendOnceAsync(method, path, body, ct);
-    }
-
-    /// <summary>
-    /// Egy kérés a realm Admin API-jára az aktuális (szükség esetén frissen kért) service account tokennel.
-    /// </summary>
-    private async Task<HttpResponseMessage> SendOnceAsync(HttpMethod method, string path, object? body, CancellationToken ct)
     {
         using var request = new HttpRequestMessage(method, $"{settings.BaseUrl}/admin/realms/{settings.Realm}/{path}");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await GetTokenAsync(ct));
@@ -145,8 +127,7 @@ public class KeycloakAdminClient(HttpClient http, IOptions<KeycloakAdminOptions>
     }
 
     /// <summary>
-    /// Service account token client credentials folyamattal; a példány élettartamára megjegyzi, de 401
-    /// után eldobható, hogy frisset kérjen.
+    /// Service account token client credentials folyamattal; a példány élettartamára megjegyzi.
     /// </summary>
     private async Task<string> GetTokenAsync(CancellationToken ct)
     {

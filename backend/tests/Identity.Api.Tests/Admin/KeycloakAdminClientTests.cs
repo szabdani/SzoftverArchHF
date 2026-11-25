@@ -103,26 +103,6 @@ public class KeycloakAdminClientTests
     }
 
     /// <summary>
-    /// Ha a megjegyzett (lejárt) token 401-et ad, a kliens friss tokent kér és egyszer újrapróbálja a
-    /// kérést; a második próbálkozás sikeres. Így az admin felhasználólista nem esik szét a rövid életű
-    /// service account token lejárta miatt.
-    /// </summary>
-    [Fact]
-    public async Task ExpiredToken_RefreshesAndRetriesOnce()
-    {
-        var handler = new FakeHandler();
-        handler.OnFirstCallUnauthorized(HttpMethod.Get, "users?briefRepresentation=true&max=50");
-        handler.On(HttpMethod.Get, "users?briefRepresentation=true&max=50", $$"""[{"id":"{{AnnaId}}","username":"anna@x.hu","email":"anna@x.hu","firstName":"Anna","lastName":"Kiss","enabled":true}]""");
-
-        var users = await Client(handler).SearchUsersAsync(null, 50, CancellationToken.None);
-
-        Assert.Single(users);
-        // Két token-kérés (az eredeti és a 401 utáni frissítés) és két users-hívás (401, majd siker).
-        Assert.Equal(2, handler.Requests.Count(r => r.Uri.EndsWith("/token")));
-        Assert.Equal(2, handler.Requests.Count(r => r.Uri.Contains("users?briefRepresentation")));
-    }
-
-    /// <summary>
     /// A tesztelt kliens a hamis kezelővel és rögzített beállításokkal.
     /// </summary>
     private static KeycloakAdminClient Client(FakeHandler handler) => new(
@@ -136,7 +116,6 @@ public class KeycloakAdminClientTests
     private sealed class FakeHandler : HttpMessageHandler
     {
         private readonly Dictionary<(HttpMethod, string), (string Body, HttpStatusCode Status)> responses = [];
-        private readonly HashSet<(HttpMethod, string)> unauthorizeFirstCall = [];
 
         public List<(HttpMethod Method, string Uri, string Body, string? Authorization)> Requests { get; } = [];
 
@@ -145,13 +124,6 @@ public class KeycloakAdminClientTests
         /// </summary>
         public void On(HttpMethod method, string path, string body, HttpStatusCode status = HttpStatusCode.OK) =>
             responses[(method, AdminBase + path)] = (body, status);
-
-        /// <summary>
-        /// Egy útvonal első hívása 401-et ad (mintha a megjegyzett token lejárt volna); a következő hívásra
-        /// a beállított válasz jön. A token lejárásának szimulálásához.
-        /// </summary>
-        public void OnFirstCallUnauthorized(HttpMethod method, string path) =>
-            unauthorizeFirstCall.Add((method, AdminBase + path));
 
         /// <summary>
         /// Az egyetlen, adott metódusú (és opcionálisan útvonalrészletet tartalmazó) kérés.
@@ -171,12 +143,6 @@ public class KeycloakAdminClientTests
             if (uri.EndsWith("/protocol/openid-connect/token"))
             {
                 return Json("""{"access_token":"test-token","expires_in":300}""", HttpStatusCode.OK);
-            }
-
-            // A lejárt token szimulálása: az első hívás 401, utána a beállított válasz jön.
-            if (unauthorizeFirstCall.Remove((request.Method, uri)))
-            {
-                return new HttpResponseMessage(HttpStatusCode.Unauthorized);
             }
 
             return responses.TryGetValue((request.Method, uri), out var response)
