@@ -234,15 +234,21 @@ Ellenőrzés: frontend `npm run lint` / `npm run build` / `npm test` (53 teszt) 
 
 ### Admin szerepkör – végigtesztelve (2026-11-25)
 - **UC16:** a felhasználólista betölt, keresés működik, a szerepkör-módosítás és a letiltás is (a letiltott nem tud belépni). A saját admin sor védett (a szerepköre és az aktív kapcsolója tiltott).
-  - **Szerepkörváltás érvényesülése (döntés):** ha az admin átállítja egy felhasználó szerepkörét, az a felhasználó **következő bejelentkezésekor** lép érvénybe. A kézben lévő token a lejáratáig a régi szerepkört hordozza; a friss token (akár refresh, akár belépés) már az újat adja, és a szerver a jogokat mindig az aktuális token alapján ellenőrzi. Ez szándékos (a spec nem kér azonnali frissítést). Hogy a felhasználó értesüljön: a frontend figyeli, ha a munkamenet közben a szerepköre megváltozik, és egy értesítéssel kéri az újrabejelentkezést (`src/app/useRoleChangeNotice.tsx`).
+  - **Szerepkörváltás érvényesülése (döntés):** ha az admin átállítja egy felhasználó szerepkörét, a szerver a jogokat mindig az aktuális token alapján ellenőrzi; a kézben lévő token a lejáratáig a régi szerepkört hordozza, a csendes token-frissítés után (néhány percen belül) viszont már az új szerepkör érvényes, és a menü is frissül újrabejelentkezés nélkül. A frontend figyeli, ha a munkamenet közben a szerepkör megváltozik (mindkét irányban: futó↔edző), és egy értesítéssel kéri az újrabejelentkezést a biztos, teljes hozzáférésért (`src/app/useRoleChangeNotice.tsx`). Élőben tesztelve: a notification megjelenik, az „Újra bejelentkezés" gomb a Keycloak login-ra visz.
 - **UC17:** a szabály-küszöbök módosíthatók, a min/max korlátok működnek; a szabály ki-/bekapcsolható.
 - **UC18:** a demóadatok létrehozása és törlése működik; a 4 demó-futó a `coach@`-nál eltérő kockázattal jelenik meg, és a **kockázat szerinti rendezés (UC14)** mindkét irányban rendez.
 
 ### UC19 (kihagyott edzés) – tesztelve (2026-11-25)
 A `MissedWorkoutJob` induláskor és óránként fut. Múltbeli, nem teljesített tervezett edzésekkel tesztelve (a `docker compose restart training-api` induláskor azonnal lefuttatja az ellenőrzést): a log „N tervezett edzés kihagyottra állítva" sort ad, a naptárban az érintett edzések pirosak (kihagyott), és hetente ≥ 2 kihagyásnál figyelmeztetés jön (a kockázati pontszámba is beszámít, spec 3.8). Idempotens: az ismételt futás nem jelöl újra és nem duplikál figyelmeztetést.
 
+### Jogosultság közvetlen API-hívásokkal – tesztelve (2026-11-25)
+Szerveroldalon ellenőrizve, friss tokenekkel a három szerepkörre:
+- Az **admin** nem éri el a futók edzés- és kockázatadatait (`/api/training/workouts`, `/api/analytics/risk` → 403; a végpontok `RunnerOrCoach` policy-vel védettek).
+- A **futó** nem fér más futó adataihoz (`?runnerId=<másik>` → 403).
+- Az **edző** csak a hozzárendelt futóját éri el (hozzárendelt → 200, idegen/nem hozzárendelt ID → 403).
+- A saját adat elérhető (200).
+
 ### Még hátra a QA-ból
-- **Jogosultság közvetlen API-hívásokkal** (az admin nem látja a futók edzés-/pulzusadatait; a futó nem fér más futó adataihoz; az edző csak a hozzárendelt futóét).
 - **Reszponzivitás és a négy böngésző** (spec 4.1): Chrome, Firefox, Safari, Edge, asztalon és mobil szélességben.
 
 > **Teszt-higiénia:** ha a Keycloak DB-t eldobod (pl. realm-újraimporthoz), a konzisztencia érdekében dobd el az összes adat-volume-ot is együtt: `docker compose down -v && docker compose up -d --build`. Így nem marad régi felhasználói ID-ra hivatkozó, elárvult adat a Training/Analytics/Identity adatbázisokban.
