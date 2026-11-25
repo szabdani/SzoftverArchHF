@@ -237,9 +237,12 @@ Ellenőrzés: frontend `npm run lint` / `npm run build` / `npm test` (53 teszt) 
 - **UC17:** a szabály-küszöbök módosíthatók, a min/max korlátok működnek; a szabály ki-/bekapcsolható.
 - **UC18:** a demóadatok létrehozása és törlése működik; a 4 demó-futó a `coach@`-nál eltérő kockázattal jelenik meg, és a **kockázat szerinti rendezés (UC14)** mindkét irányban rendez.
 
+### UC19 (kihagyott edzés) – tesztelve (2026-11-25)
+A `MissedWorkoutJob` induláskor és óránként fut. Múltbeli, nem teljesített tervezett edzésekkel tesztelve (a `docker compose restart training-api` induláskor azonnal lefuttatja az ellenőrzést): a log „N tervezett edzés kihagyottra állítva" sort ad, a naptárban az érintett edzések pirosak (kihagyott), és hetente ≥ 2 kihagyásnál figyelmeztetés jön (a kockázati pontszámba is beszámít, spec 3.8). Idempotens: az ismételt futás nem jelöl újra és nem duplikál figyelmeztetést.
+
 ### Még hátra a QA-ból
-- **UC19 (kihagyott edzés):** óránkénti háttérjob, külön időzített teszt.
-- **Jogosultság közvetlen API-hívásokkal, reszponzivitás és a négy böngésző** (8. fejezet).
+- **Jogosultság közvetlen API-hívásokkal** (az admin nem látja a futók edzés-/pulzusadatait; a futó nem fér más futó adataihoz; az edző csak a hozzárendelt futóét).
+- **Reszponzivitás és a négy böngésző** (spec 4.1): Chrome, Firefox, Safari, Edge, asztalon és mobil szélességben.
 
 > **Teszt-higiénia:** ha a Keycloak DB-t eldobod (pl. realm-újraimporthoz), a konzisztencia érdekében dobd el az összes adat-volume-ot is együtt: `docker compose down -v && docker compose up -d --build`. Így nem marad régi felhasználói ID-ra hivatkozó, elárvult adat a Training/Analytics/Identity adatbázisokban.
 
