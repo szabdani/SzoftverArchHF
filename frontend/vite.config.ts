@@ -13,5 +13,7 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     clearMocks: true,
+    // Csak a forrásban lévő egységtesztek; a Playwright E2E (e2e/) külön fut (npm run test:e2e).
+    include: ['src/**/*.test.{ts,tsx}'],
   },
 });
