@@ -199,20 +199,67 @@ Megjegyzések a viselkedésről (szándékos, nem hiba):
 - Mindhárom súlyossági szint előállt élesben (információ / figyelmeztetés / kritikus).
 - A validáció a szerverrel közös sémából mezőnkénti hibaüzenetként jelenik meg; a számmezők felső határának megsértése is így látszik (nincs néma visszaállítás).
 
-### Elvégzett QA-javítások (a `feature/qa-workout-form` ágon, futó-oldali űrlapok)
-A tesztelés közben felmerült beviteli finomítások, tisztán a frontenden (és egy backend-validáció egységesítése):
+### Edző szerepkör – végigtesztelve, a spec szerint működik
+Kipróbált use-case-ek: UC12 (futó meghívása), UC13 (a futó elfogadja / megszünteti a kapcsolatot), UC14 (futók áttekintése, a futó csak olvasható oldala, tervkészítés a futónak).
+
+- A meghívás e-mail címre megy; a függő meghívók listázódnak. A saját cím meghívása 409-et ad; ismételt meghívás függő vagy élő kapcsolatnál 409; érvénytelen e-mail mezőhibát ad.
+- A futó elfogadja az „Edzőim” oldalon → megjelenik az edző „Futóim” listájában (utolsó edzés, heti km, kockázati kategória). A futó meg is szüntetheti a kapcsolatot; ekkor az edző azonnal elveszíti a hozzáférést (a Futóim listából eltűnik, a futó oldala/az API 404-gyel véd).
+- A futó oldala az edzőnek az edzésnaplón és a céloknál csak olvasható; a naptárban az edző tervet és tervezett edzést készíthet, módosíthat, törölhet.
+
+Megjegyzések a viselkedésről (szándékos, nem hiba):
+- **A kapcsolatot csak a futó szüntetheti meg**, az edző nem (a `DELETE /api/identity/links/{id}` végpont `Runner` policy-vel védett). Ez megfelel a spec 3.1-nek: „a futó bármikor megszüntetheti”. Nem hiba, hogy az edzőnél nincs ilyen gomb.
+- **Az edző a hozzárendelt futó figyelmeztetéseit nyugtázhatja** a futó áttekintő oldaláról (spec 3.1: „megtekintés, nyugtázás – hozzárendelt futóké”).
+- **Hátra:** a kockázat szerinti rendezés több futóval, a demóadatokkal (UC18) ellenőrizendő.
+
+### Elvégzett QA-javítások
+A tesztelés közben felmerült, elvégzett javítások.
+
+**Futó-oldali űrlapok (`feature/qa-workout-form` ág)** – beviteli finomítások, tisztán a frontenden (és egy backend-validáció egységesítése):
 - **Idő-bevitel három mezővel.** Az edzés időtartama, a cél célideje és a tervezett edzés tervezett időtartama egy közös `DurationInput` komponenssel (óra / perc / másodperc, fel-le nyíllal) adható meg a korábbi `óó:pp:mm` szöveges mező helyett. A komponens a `src/lib/DurationInput.tsx`-ben van; a form belső reprezentációja (`óó:pp:mm` string) és a szerverrel közös validáció változatlan.
 - **Számmezők határai.** Az edzés-űrlap számmezőin nincs néma felső klampolás: a határsértés submitkor mezőnkénti magyar hibaüzenetként jelenik meg (a spec „kliens és szerver ugyanazzal a sémával validál” elve szerint).
 - **Célidő felső határa 10 óra.** Korábban 23:59:59 volt; egységesítve az edzés időtartamával (1 perc–10 óra). Backend DTO + minta + egységteszt módosult, a `Duration1MinTo24Hours` minta törölve, a séma és a frontend kliens újragenerálva.
 - **UC08 kitöltés.** Az edzés rögzítésekor egy tervezett edzés kiválasztása kitölti az űrlapot annak értékeiből (típus, táv, időtartam, cél RPE, megjegyzés); a pulzust és az emelkedést a futó tölti, a választás törlése a már beírt értékeket nem bántja.
 
-Ellenőrzés: frontend `npm run lint` / `npm run build` / `npm test` (53 teszt) zöld; backend `dotnet test` (195 teszt) zöld.
+**Edzői folyamat (`feature/qa-coach` ág):**
+- **Függő edzői meghívó jelzése a futónak (UC12/UC13).** A futó eddig csak az „Edzőim” oldalra lépve látta, ha meghívták. Mostantól az „Edzőim” menüponton számláló-badge mutatja a függő meghívók számát, és belépés után egyszeri értesítés is felhívja rá a figyelmet. Tisztán frontend (`src/app/usePendingInvitations.ts`, `AppLayout`).
+
+**Admin – Keycloak Admin API (`feature/qa-admin` ág):**
+- **Az admin felhasználólista 401-et adott (UC16).** A `futoedzes-identity-admin` service account tokenjéből hiányzott a **`kc-admin-api`** client scope, amit a Keycloak 26 az Admin REST API-hoz megkövetel (ez adja a tokenhez a szükséges audience-t). Emiatt az Admin API minden hívást 401-gyel utasított el, hiába voltak meg a `realm-management` szerepkörök és a helyes audience. A token `scope` claimje üres/hiányos volt; a működő `admin-cli` tokené viszont tartalmazta a `kc-admin-api`-t. Javítás a realmben (`infra/keycloak/futoedzes-realm.json`): a kliens `defaultClientScopes` listájához bekerült a `kc-admin-api` (a `basic`, `roles` mellé). **Fontos:** a realm csak friss Keycloak-DB-vel importálódik újra (`docker compose down` + `docker volume rm futoedzes_keycloak-db-data` + `up`), mert a `--import-realm` a meglévő realmet kihagyja.
+- **Fix felhasználói ID-k a realmben.** Eddig csak a `coach@` és a `demo-*` felhasználóknak volt fix `id`-juk a realm-JSON-ban; az `admin@`, `runner@`, `runner2@` minden Keycloak-újraimportnál új ID-t kapott. Ha közben a Training/Analytics/Identity adatbázisok megmaradtak (csak a Keycloak DB-t dobtuk el), az ezekben lévő, régi ID-ra hivatkozó adatok elárvultak: a friss login üres nézetet adott, miközben az edzői nézet a régi ID adatait mutatta. Nem alkalmazás-hiba, hanem az ismételt Keycloak-DB-eldobás artefaktja. Javítás: minden demó-felhasználó fix `id`-t kapott (`a0…` admin, `b0…` runnerek, a meglévő `c0…` coach / `d0…` demók mellé), így az újraimport nem változtatja meg őket.
+
+Ellenőrzés: frontend `npm run lint` / `npm run build` / `npm test` (53 teszt) zöld; backend `dotnet test` (195 teszt) zöld. Az admin felhasználólista friss DB-ből importált configgal is betölt (a token-próba 200).
+
+### Nyitott (terméki) kérdések
+- **Függő meghívók kezelése.** Az edző bármilyen, akár nem létező e-mail címre küldhet meghívót (pl. elgépelt cím), és az „függőben” marad időkorlát nélkül; az edző nem tudja visszavonni. A spec szerint a meghívó az e-mail címhez kötődik (később regisztráló felhasználóhoz is), ezért ez önmagában nem hiba, de UX-ből zavaró. Eldöntendő: kell-e a függő meghívók visszavonása és/vagy lejárata. Egyelőre nincs implementálva.
+
+### Admin szerepkör – végigtesztelve (2026-11-25)
+- **UC16:** a felhasználólista betölt, keresés működik, a szerepkör-módosítás és a letiltás is (a letiltott nem tud belépni). A saját admin sor védett (a szerepköre és az aktív kapcsolója tiltott).
+  - **Szerepkörváltás érvényesülése (döntés):** ha az admin átállítja egy felhasználó szerepkörét, a szerver a jogokat mindig az aktuális token alapján ellenőrzi; a kézben lévő token a lejáratáig a régi szerepkört hordozza, a csendes token-frissítés után (néhány percen belül) viszont már az új szerepkör érvényes, és a menü is frissül újrabejelentkezés nélkül. A frontend figyeli, ha a munkamenet közben a szerepkör megváltozik (mindkét irányban: futó↔edző), és egy értesítéssel kéri az újrabejelentkezést a biztos, teljes hozzáférésért (`src/app/useRoleChangeNotice.tsx`). Élőben tesztelve: a notification megjelenik, az „Újra bejelentkezés" gomb a Keycloak login-ra visz.
+- **UC17:** a szabály-küszöbök módosíthatók, a min/max korlátok működnek; a szabály ki-/bekapcsolható.
+- **UC18:** a demóadatok létrehozása és törlése működik; a 4 demó-futó a `coach@`-nál eltérő kockázattal jelenik meg, és a **kockázat szerinti rendezés (UC14)** mindkét irányban rendez.
+
+### UC19 (kihagyott edzés) – tesztelve (2026-11-25)
+A `MissedWorkoutJob` induláskor és óránként fut. Múltbeli, nem teljesített tervezett edzésekkel tesztelve (a `docker compose restart training-api` induláskor azonnal lefuttatja az ellenőrzést): a log „N tervezett edzés kihagyottra állítva" sort ad, a naptárban az érintett edzések pirosak (kihagyott), és hetente ≥ 2 kihagyásnál figyelmeztetés jön (a kockázati pontszámba is beszámít, spec 3.8). Idempotens: az ismételt futás nem jelöl újra és nem duplikál figyelmeztetést.
+
+### Jogosultság közvetlen API-hívásokkal – tesztelve (2026-11-25)
+Szerveroldalon ellenőrizve, friss tokenekkel a három szerepkörre:
+- Az **admin** nem éri el a futók edzés- és kockázatadatait (`/api/training/workouts`, `/api/analytics/risk` → 403; a végpontok `RunnerOrCoach` policy-vel védettek).
+- A **futó** nem fér más futó adataihoz (`?runnerId=<másik>` → 403).
+- Az **edző** csak a hozzárendelt futóját éri el (hozzárendelt → 200, idegen/nem hozzárendelt ID → 403).
+- A saját adat elérhető (200).
+
+### Reszponzivitás és böngészők (spec 4.1) – tesztelve (2026-11-25)
+- **Chrome, Firefox, Edge** asztalon: a felület rendben, a fő oldalak (dashboard, naptár, edzésnapló, admin) jól jelennek meg.
+- **Mobil szélesség** a böngésző DevTools eszköznézetében: a layout reszponzív (a Mantine alapból az), a menü lenyílik.
+
+Két környezeti korlát (nem a felület hibája):
+- **Valódi telefonos belépés más hálózati címről nem működik.** A dev-környezet a `localhost`-ra van szabva: a frontend OIDC `authority`-ja és a Keycloak `KC_HOSTNAME`-je is `http://localhost/auth`. Ezért a géped IP-jén (`http://192.168.x.y`) megnyitva a telefon a Keycloak-konfigot a saját `localhost`-ján keresi → `Failed to fetch`, a login-képernyőig sem jut el. Éles környezetben valódi hostname + HTTPS oldja meg; dev-ben csak ideiglenes, nem committolandó IP-s override-dal lenne kipróbálható (a frontend authority + a Keycloak hostname + a kliens `redirectUris`/`webOrigins` átírásával).
+- **Safari (macOS/iOS) nincs tesztelve**, mert a rendelkezésre álló eszköz Windows (a Safari for Windows megszűnt). Mac/iPhone-on vagy böngésző-tesztszolgáltatással pótolható, ha a csapat igényli.
 
 ### Még hátra a QA-ból
-- **Edző szerepkör (UC12, UC13, UC14):** meghívás, elfogadás/megszüntetés, a futó csak olvasható oldala és a tervkészítés **kész** (lásd a 8. fejezet „Edző” szakaszát). Hátra: a **kockázat szerinti rendezés** több futóval, a demóadatokkal.
-- **Admin szerepkör (UC16–UC18):** felhasználók/szerepkörök, szabály-küszöbök, demóadatok.
-- **UC19 (kihagyott edzés):** óránkénti háttérjob, külön időzített teszt.
-- **Jogosultság közvetlen API-hívásokkal, reszponzivitás és a négy böngésző** (8. fejezet).
+- A funkcionális use-case-ek, a jogosultság és a reszponzivitás (a fenti korlátokkal) élőben tesztelve. Nyitott: a valódi iOS/Safari és a valódi telefonos belépés (környezeti korlátok, lásd fent), valamint a 7. fejezetben felsorolt, a spec által a QA-szerephez rendelt automata integrációs/E2E tesztek (Testcontainers, Playwright), amelyek a repóban továbbra sincsenek.
+
+> **Teszt-higiénia:** ha a Keycloak DB-t eldobod (pl. realm-újraimporthoz), a konzisztencia érdekében dobd el az összes adat-volume-ot is együtt: `docker compose down -v && docker compose up -d --build`. Így nem marad régi felhasználói ID-ra hivatkozó, elárvult adat a Training/Analytics/Identity adatbázisokban.
 
 ## 8. Mit kell mindenképpen tesztelni
 
@@ -244,41 +291,34 @@ Ellenőrzés: frontend `npm run lint` / `npm run build` / `npm test` (53 teszt) 
 - [x] Célok: egy aktív cél lehet, az újtól a régi archiválódik; látszik a hátralévő hetek száma.
 - [x] Naptár: havi és heti nézet; a tervezett, teljesített és kihagyott edzés eltérő jelöléssel.
   - **Húzás:** a terv időszakán belül mentődik, kívül hibaüzenettel visszaugrik. *(2026-11-25: a terv időszakán kívülre húzva visszaugrik – rendben.)*
-  - Mobilon érintéssel is kipróbálandó. *(még hátra)*
-- [ ] Kihagyott edzés (UC19): egy múltbeli, nem teljesített tervezett edzés legkésőbb egy órán belül „kihagyott” lesz; hetente legalább 2 esetén figyelmeztetés jön.
+  - Mobilon érintéssel: a DevTools eszköznézetében kipróbálva; valódi iOS/Safari eszközön nem (környezeti korlát, lásd a 7.5 reszponzivitás-szakaszt).
+- [x] Kihagyott edzés (UC19): egy múltbeli, nem teljesített tervezett edzés legkésőbb egy órán belül „kihagyott” lesz; hetente legalább 2 esetén figyelmeztetés jön. *(2026-11-25: `restart training-api` → a job azonnal lefut, a naptárban pirosak, 2+ kihagyásnál figyelmeztetés; idempotens.)*
 - [x] Figyelmeztetés nyugtázása; ugyanaz a szabály ugyanazon a héten nem jön újra. *(2026-11-25: nyugtázás, „nyugtázottak is” kapcsoló és heti dedup is a spec szerint.)*
 
 ### Edző
 
 - [x] A meghívás a futó e-mail címére → a futó az „Edzőim” oldalon elfogadja → a futó megjelenik az edző „Futóim” listájában. *(2026-11-25: működik. A saját cím meghívása 409-et ad; ismételt meghívás függő/élő kapcsolatnál 409; érvénytelen e-mail mezőhibát ad.)*
-- [ ] A „Futóim” lista kockázat szerint rendezhető; a futó oldalán látszik a dashboard, az edzésnapló és a célok (csak olvasható), a naptárban pedig az edző tervet készíthet. *(2026-11-25: a futó oldala csak olvasható az edzésnaplón és a céloknál, a naptárban az edző tervet/tervezett edzést készíthet, módosíthat, törölhet – rendben. A kockázat szerinti rendezés demóadatokkal, több futóval ellenőrizendő.)*
+- [x] A „Futóim” lista kockázat szerint rendezhető; a futó oldalán látszik a dashboard, az edzésnapló és a célok (csak olvasható), a naptárban pedig az edző tervet készíthet. *(2026-11-25: a futó oldala csak olvasható az edzésnaplón és a céloknál, a naptárban az edző tervet/tervezett edzést készíthet; a kockázat szerinti rendezés demóadatokkal, több futóval mindkét irányban rendez.)*
 - [x] Ha a futó megszünteti a kapcsolatot, az edző azonnal elveszíti a hozzáférést (a futó oldala és az API is elutasítja). *(2026-11-25: a futó megszüntette, a Futóim listából eltűnt; nem hozzárendelt futó oldala „nincs hozzád rendelve” figyelmeztetést ad, az API 404-gyel véd.)*
-
-#### Edzői QA – döntések és megjegyzések (2026-11-25)
-
-- **A kapcsolatot csak a futó szüntetheti meg**, az edző nem (a `DELETE /api/identity/links/{id}` végpont `Runner` policy-vel védett). Ez megfelel a spec 3.1-nek: „a futó bármikor megszüntetheti”. Nem hiba, hogy az edzőnél nincs ilyen gomb.
-- **Az edző a hozzárendelt futó figyelmeztetéseit nyugtázhatja** a futó áttekintő oldaláról (spec 3.1: „megtekintés, nyugtázás – hozzárendelt futóké”). Szándékos.
-- **Elvégzett QA-javítás (ezen az ágon, UC12/UC13):** a futó belépéskor eddig semmilyen jelzést nem kapott a függő edzői meghívóról (csak az „Edzőim” oldalon látta). Mostantól az „Edzőim” menüponton számláló-badge mutatja a függő meghívók számát, és belépés után egyszeri értesítés is felhívja rá a figyelmet. Tisztán frontend (`src/app/usePendingInvitations.ts`, `AppLayout`).
-- **Nyitott (terméki) kérdés – függő meghívók kezelése:** jelenleg az edző bármilyen, akár nem létező e-mail címre küldhet meghívót (pl. elgépelt cím), és az „függőben” marad időkorlát nélkül; az edző nem tudja visszavonni. A spec szerint a meghívó az e-mail címhez kötődik (később regisztráló felhasználóhoz is), ezért ez önmagában nem hiba, de UX-ből zavaró. Eldöntendő: kell-e a függő meghívók visszavonása és/vagy lejárata. Egyelőre nincs implementálva.
 
 ### Admin
 
-- [ ] Felhasználó keresése, szerepkör módosítása, letiltás. A letiltott felhasználó nem tud belépni. A saját sor nem módosítható.
-- [ ] Szabályok: egy küszöb módosítása után a pontszámok azonnal frissülnek; a kikapcsolt szabály nem ad pontot, és nem küld figyelmeztetést.
-- [ ] Demóadatok:
+- [x] Felhasználó keresése, szerepkör módosítása, letiltás. A letiltott felhasználó nem tud belépni. A saját sor nem módosítható. *(2026-11-25: mind rendben; a szerepkörváltásról a felhasználó értesítést kap, lásd a 7.5 szakaszt.)*
+- [x] Szabályok: egy küszöb módosítása után a pontszámok azonnal frissülnek; a kikapcsolt szabály nem ad pontot, és nem küld figyelmeztetést. *(2026-11-25: a min/max korlátok és a ki-/bekapcsolás is működik.)*
+- [x] Demóadatok:
   - a létrehozás után a `coach@futoedzes.local` „Futóim” listájában négy futó jelenik meg, eltérő kockázattal (a `demo-spike` magas);
   - törlés után eltűnnek, és nem marad utánuk hamis figyelmeztetés;
-  - a demó futók be is tudnak lépni.
+  - a demó futók be is tudnak lépni. *(2026-11-25: mind rendben.)*
 
 ### Jogosultság (közvetlen API-hívásokkal is)
 
-Token kérése: lásd a README-t.
+Token kérése: lásd a README-t. *(2026-11-25: szerveroldalon ellenőrizve, lásd a 7.5 „Jogosultság közvetlen API-hívásokkal” szakaszt.)*
 
-- [ ] Az edző nem hozzárendelt futó adatait nem kapja meg (404).
-- [ ] Az edző nem módosíthatja a futó edzéseit.
-- [ ] Az admin nem látja a futók edzés- és pulzusadatait.
-- [ ] A futó nem fér hozzá más futó adataihoz.
+- [x] Az edző nem hozzárendelt futó adatait nem kapja meg (idegen ID → 403; hozzárendelt → 200).
+- [x] Az edző nem módosíthatja a futó edzéseit (az edzés-módosító végpontok `Runner` policy-vel védettek).
+- [x] Az admin nem látja a futók edzés- és pulzusadatait (403).
+- [x] A futó nem fér hozzá más futó adataihoz (403).
 
 ### Felület
 
-- [ ] Chrome, Firefox, Safari és Edge, asztalon és mobil szélességben (a spec 4.1 szerint).
+- [x] Chrome, Firefox, Edge, asztalon és mobil (DevTools) szélességben – rendben. Safari (macOS/iOS) és valódi telefonos belépés: környezeti korlát, lásd a 7.5 reszponzivitás-szakaszt.
