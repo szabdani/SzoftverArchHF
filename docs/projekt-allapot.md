@@ -223,13 +223,16 @@ A tesztelés közben felmerült, elvégzett javítások.
 **Edzői folyamat (`feature/qa-coach` ág):**
 - **Függő edzői meghívó jelzése a futónak (UC12/UC13).** A futó eddig csak az „Edzőim” oldalra lépve látta, ha meghívták. Mostantól az „Edzőim” menüponton számláló-badge mutatja a függő meghívók számát, és belépés után egyszeri értesítés is felhívja rá a figyelmet. Tisztán frontend (`src/app/usePendingInvitations.ts`, `AppLayout`).
 
-Ellenőrzés: frontend `npm run lint` / `npm run build` / `npm test` (53 teszt) zöld; backend `dotnet test` (195 teszt) zöld.
+**Admin – Keycloak Admin API (`feature/qa-admin` ág):**
+- **Az admin felhasználólista 401-et adott (UC16).** A `futoedzes-identity-admin` service account tokenjéből hiányzott a **`kc-admin-api`** client scope, amit a Keycloak 26 az Admin REST API-hoz megkövetel (ez adja a tokenhez a szükséges audience-t). Emiatt az Admin API minden hívást 401-gyel utasított el, hiába voltak meg a `realm-management` szerepkörök és a helyes audience. A token `scope` claimje üres/hiányos volt; a működő `admin-cli` tokené viszont tartalmazta a `kc-admin-api`-t. Javítás a realmben (`infra/keycloak/futoedzes-realm.json`): a kliens `defaultClientScopes` listájához bekerült a `kc-admin-api` (a `basic`, `roles` mellé). **Fontos:** a realm csak friss Keycloak-DB-vel importálódik újra (`docker compose down` + `docker volume rm futoedzes_keycloak-db-data` + `up`), mert a `--import-realm` a meglévő realmet kihagyja.
+
+Ellenőrzés: frontend `npm run lint` / `npm run build` / `npm test` (53 teszt) zöld; backend `dotnet test` (195 teszt) zöld. Az admin felhasználólista friss DB-ből importált configgal is betölt (a token-próba 200).
 
 ### Nyitott (terméki) kérdések
 - **Függő meghívók kezelése.** Az edző bármilyen, akár nem létező e-mail címre küldhet meghívót (pl. elgépelt cím), és az „függőben” marad időkorlát nélkül; az edző nem tudja visszavonni. A spec szerint a meghívó az e-mail címhez kötődik (később regisztráló felhasználóhoz is), ezért ez önmagában nem hiba, de UX-ből zavaró. Eldöntendő: kell-e a függő meghívók visszavonása és/vagy lejárata. Egyelőre nincs implementálva.
 
 ### Még hátra a QA-ból
-- **Admin szerepkör (UC16–UC18):** felhasználók/szerepkörök, szabály-küszöbök, demóadatok.
+- **Admin szerepkör (UC16–UC18):** a felhasználólista már betölt (lásd a `kc-admin-api` javítást). Hátra: a keresés, szerepkör-módosítás és letiltás kipróbálása (a saját sor védett), a szabály-küszöbök (UC17), és a demóadatok (UC18).
 - **Kockázat szerinti rendezés (UC14):** több futóval, a demóadatokkal ellenőrizendő.
 - **UC19 (kihagyott edzés):** óránkénti háttérjob, külön időzített teszt.
 - **Jogosultság közvetlen API-hívásokkal, reszponzivitás és a négy böngésző** (8. fejezet).
