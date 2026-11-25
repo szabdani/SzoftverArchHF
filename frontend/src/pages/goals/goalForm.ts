@@ -16,7 +16,7 @@ const fieldMessages: Record<string, string> = {
   type: 'Válassz céltípust.',
   distanceKm: 'A táv 0,1 és 500 km között lehet.',
   targetDate: 'A céldátum megadása kötelező.',
-  targetTime: 'A célidő 1 perc és 23:59:59 között lehet, óó:pp:mm formátumban.',
+  targetTime: 'A célidő 1 perc és 10 óra között lehet, óó:pp:mm formátumban.',
 };
 
 /**
