@@ -6,6 +6,7 @@ import { Link, Outlet, useLocation } from 'react-router';
 import { useRoles } from '../auth/roles';
 import { navItemsFor } from './navigation';
 import { usePendingInvitations } from './usePendingInvitations';
+import { useRoleChangeNotice } from './useRoleChangeNotice';
 
 /**
  * Az alkalmazás kerete: fejléc a felhasználóval és kilépéssel, oldalsó menü a szerepkörök szerint
@@ -17,6 +18,7 @@ export function AppLayout() {
   const location = useLocation();
   const [opened, { toggle, close }] = useDisclosure();
   const pendingInvitations = usePendingInvitations(roles);
+  useRoleChangeNotice(roles);
 
   return (
     <AppShell header={{ height: 56 }} navbar={{ width: 240, breakpoint: 'sm', collapsed: { mobile: !opened } }} padding="md">

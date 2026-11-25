@@ -234,6 +234,7 @@ Ellenőrzés: frontend `npm run lint` / `npm run build` / `npm test` (53 teszt) 
 
 ### Admin szerepkör – végigtesztelve (2026-11-25)
 - **UC16:** a felhasználólista betölt, keresés működik, a szerepkör-módosítás és a letiltás is (a letiltott nem tud belépni). A saját admin sor védett (a szerepköre és az aktív kapcsolója tiltott).
+  - **Szerepkörváltás érvényesülése (döntés):** ha az admin átállítja egy felhasználó szerepkörét, az a felhasználó **következő bejelentkezésekor** lép érvénybe. A kézben lévő token a lejáratáig a régi szerepkört hordozza; a friss token (akár refresh, akár belépés) már az újat adja, és a szerver a jogokat mindig az aktuális token alapján ellenőrzi. Ez szándékos (a spec nem kér azonnali frissítést). Hogy a felhasználó értesüljön: a frontend figyeli, ha a munkamenet közben a szerepköre megváltozik, és egy értesítéssel kéri az újrabejelentkezést (`src/app/useRoleChangeNotice.tsx`).
 - **UC17:** a szabály-küszöbök módosíthatók, a min/max korlátok működnek; a szabály ki-/bekapcsolható.
 - **UC18:** a demóadatok létrehozása és törlése működik; a 4 demó-futó a `coach@`-nál eltérő kockázattal jelenik meg, és a **kockázat szerinti rendezés (UC14)** mindkét irányban rendez.
 
