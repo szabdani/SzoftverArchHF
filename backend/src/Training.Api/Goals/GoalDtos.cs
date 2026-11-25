@@ -17,7 +17,7 @@ public record GoalRequest(
     decimal? DistanceKm,
     [property: Required(ErrorMessage = "A céldátum megadása kötelező.")]
     DateOnly? TargetDate,
-    [property: RegularExpression(ValidationPatterns.Duration1MinTo24Hours, ErrorMessage = "A célidő 1 perc és 23:59:59 között lehet, óó:pp:mm formátumban.")]
+    [property: RegularExpression(ValidationPatterns.Duration1MinTo10Hours, ErrorMessage = "A célidő 1 perc és 10 óra között lehet, óó:pp:mm formátumban.")]
     TimeSpan? TargetTime);
 
 /// <summary>A validáció után már biztosan teljes, érvényes bemenet.</summary>
