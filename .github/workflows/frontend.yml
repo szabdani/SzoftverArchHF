@@ -5,7 +5,13 @@ on:
     branches: [main]
     paths: ["frontend/**", ".github/workflows/frontend.yml"]
   pull_request:
-    paths: ["frontend/**", ".github/workflows/frontend.yml"]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend.yml"
+      # Az E2E a teljes rendszert futtatja, ezért a backend és az infra változására is fusson.
+      - "backend/**"
+      - "infra/**"
+      - "docker-compose.yml"
 
 jobs:
   build-and-test:
@@ -30,3 +36,58 @@ jobs:
       # A compose-ban futó image (nginx) is felépül, így a Dockerfile hibája is kiderül.
       - name: Docker image
         run: docker build -t futoedzes-frontend .
+
+  e2e:
+    # Playwright E2E a teljes, Docker Compose-zal felhúzott rendszer ellen, token-injektálásos belépéssel.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: A teljes rendszer indítása
+        run: docker compose up -d --build
+
+      - name: Várakozás a gateway és a Keycloak készenlétére
+        run: |
+          echo "A Keycloak realm-importja és az API-k indulása eltarthat egy ideig."
+          for i in $(seq 1 60); do
+            if curl -fsS "http://localhost/auth/realms/futoedzes/.well-known/openid-configuration" > /dev/null; then
+              echo "Keycloak kész."
+              break
+            fi
+            sleep 5
+          done
+          # A frontend (gateway /) is álljon készen.
+          for i in $(seq 1 30); do
+            if curl -fsS "http://localhost/" > /dev/null; then
+              echo "Frontend kész."
+              break
+            fi
+            sleep 5
+          done
+
+      - name: Playwright függőségek
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: E2E tesztek
+        working-directory: frontend
+        run: npm run test:e2e
+
+      - name: Playwright riport mentése
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report
+          retention-days: 7
+
+      - name: Compose logok hiba esetén
+        if: failure()
+        run: docker compose logs --tail 100
