@@ -1,4 +1,4 @@
-import { Button, Group, Modal, NumberInput, Select, Stack, TextInput } from '@mantine/core';
+import { Button, Group, Modal, NumberInput, Select, Stack } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
@@ -8,6 +8,7 @@ import { errorMessage } from '../../api/apiError';
 import { postApiTrainingGoals, putApiTrainingGoalsById } from '../../api/training/sdk.gen';
 import type { GoalRequest, GoalResponse, GoalType } from '../../api/training/types.gen';
 import { goalTypeLabels } from '../../lib/format';
+import { DurationInput } from '../../lib/DurationInput';
 import { applyServerErrors } from '../../lib/serverErrors';
 import { emptyGoalForm, goalToFormValues, toGoalRequest, validateGoal } from './goalForm';
 
@@ -56,7 +57,7 @@ export function GoalFormModal({ opened, onClose, goal }: { opened: boolean; onCl
             <NumberInput label="Táv (km)" withAsterisk min={0} decimalScale={2} decimalSeparator="," key={form.key('distanceKm')} {...form.getInputProps('distanceKm')} />
           )}
           <DateInput label="Céldátum" withAsterisk minDate={today} valueFormat="YYYY. MM. DD." key={form.key('targetDate')} {...form.getInputProps('targetDate')} />
-          <TextInput label="Célidő (opcionális)" placeholder="óó:pp:mm" key={form.key('targetTime')} {...form.getInputProps('targetTime')} />
+          <DurationInput label="Célidő (opcionális)" value={form.values.targetTime} onChange={(next) => form.setFieldValue('targetTime', next)} error={form.errors.targetTime} />
           <Group justify="flex-end">
             <Button variant="default" onClick={onClose}>
               Mégse
