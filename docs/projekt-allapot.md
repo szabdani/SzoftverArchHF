@@ -256,8 +256,15 @@ Két környezeti korlát (nem a felület hibája):
 - **Valódi telefonos belépés más hálózati címről nem működik.** A dev-környezet a `localhost`-ra van szabva: a frontend OIDC `authority`-ja és a Keycloak `KC_HOSTNAME`-je is `http://localhost/auth`. Ezért a géped IP-jén (`http://192.168.x.y`) megnyitva a telefon a Keycloak-konfigot a saját `localhost`-ján keresi → `Failed to fetch`, a login-képernyőig sem jut el. Éles környezetben valódi hostname + HTTPS oldja meg; dev-ben csak ideiglenes, nem committolandó IP-s override-dal lenne kipróbálható (a frontend authority + a Keycloak hostname + a kliens `redirectUris`/`webOrigins` átírásával).
 - **Safari (macOS/iOS) nincs tesztelve**, mert a rendelkezésre álló eszköz Windows (a Safari for Windows megszűnt). Mac/iPhone-on vagy böngésző-tesztszolgáltatással pótolható, ha a csapat igényli.
 
+### Automata E2E tesztek (Playwright) – elkészült (2026-11-25, `feature/qa-e2e` ág)
+A `frontend/e2e/` alatt Playwright E2E tesztek futnak a **futó rendszer** ellen, **token-injektálásos** belépéssel: a teszt a Keycloaktól jelszavas folyamattal tokent kér, és a `sessionStorage`-ba írja az oidc-client-ts `User` alakjában (`oidc.user:<authority>:<clientId>` kulcs) — így nem kell a Keycloak űrlapján át belépni, a tesztek gyorsak és stabilak.
+- Lefedett folyamatok: futó belépés + áttekintő + menü, edzésnapló; edzésrögzítés (érvényes + érvénytelen → mezőhiba); admin demóadatok + az edzői „Futóim” lista a demó futók kockázatával.
+- Futtatás helyben: `docker compose up -d --build`, majd a `frontend/`-ben `npm run test:e2e` (lásd `frontend/e2e/README.md`).
+- CI: a `frontend.yml` külön `e2e` jobja felhozza a teljes rendszert Docker Compose-zal, megvárja a Keycloak/gateway készenlétét, és lefuttatja a Playwrightot; a riport artifactként mentődik.
+- Böngészők: alapból chromium; a firefox és a webkit (Safari-motor) projekt az `E2E_ALL_BROWSERS` beállítással kapcsolható be (a webkit részben a Safari-lefedettséget is adja).
+
 ### Még hátra a QA-ból
-- A funkcionális use-case-ek, a jogosultság és a reszponzivitás (a fenti korlátokkal) élőben tesztelve. Nyitott: a valódi iOS/Safari és a valódi telefonos belépés (környezeti korlátok, lásd fent), valamint a 7. fejezetben felsorolt, a spec által a QA-szerephez rendelt automata integrációs/E2E tesztek (Testcontainers, Playwright), amelyek a repóban továbbra sincsenek.
+- Nyitott: a valódi iOS/Safari eszközös és a valódi telefonos belépés (környezeti korlátok, lásd fent), valamint a backend **integrációs tesztek (Testcontainers)**, amelyek a repóban még nincsenek. Az E2E alapcsomag már megvan (lásd fent); bővíthető további folyamatokkal (naptár-húzás, figyelmeztetés-nyugtázás, kapcsolat megszüntetése).
 
 > **Teszt-higiénia:** ha a Keycloak DB-t eldobod (pl. realm-újraimporthoz), a konzisztencia érdekében dobd el az összes adat-volume-ot is együtt: `docker compose down -v && docker compose up -d --build`. Így nem marad régi felhasználói ID-ra hivatkozó, elárvult adat a Training/Analytics/Identity adatbázisokban.
 
