@@ -1,10 +1,11 @@
-import { AppShell, Burger, Button, Group, NavLink, Text, Title } from '@mantine/core';
+import { AppShell, Badge, Burger, Button, Group, NavLink, Text, Title } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { IconLogout } from '@tabler/icons-react';
 import { useAuth } from 'react-oidc-context';
 import { Link, Outlet, useLocation } from 'react-router';
 import { useRoles } from '../auth/roles';
 import { navItemsFor } from './navigation';
+import { usePendingInvitations } from './usePendingInvitations';
 
 /**
  * Az alkalmazás kerete: fejléc a felhasználóval és kilépéssel, oldalsó menü a szerepkörök szerint
@@ -15,6 +16,7 @@ export function AppLayout() {
   const roles = useRoles();
   const location = useLocation();
   const [opened, { toggle, close }] = useDisclosure();
+  const pendingInvitations = usePendingInvitations(roles);
 
   return (
     <AppShell header={{ height: 56 }} navbar={{ width: 240, breakpoint: 'sm', collapsed: { mobile: !opened } }} padding="md">
@@ -43,6 +45,13 @@ export function AppLayout() {
             to={item.to}
             label={item.label}
             leftSection={<item.icon size={18} />}
+            rightSection={
+              item.to === '/coaches' && pendingInvitations > 0 ? (
+                <Badge size="sm" circle color="blue" aria-label={`${pendingInvitations} függő meghívó`}>
+                  {pendingInvitations}
+                </Badge>
+              ) : undefined
+            }
             active={location.pathname === item.to || (item.to !== '/' && location.pathname.startsWith(`${item.to}/`))}
             onClick={close}
           />
