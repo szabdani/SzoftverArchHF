@@ -225,17 +225,23 @@ A tesztelés közben felmerült, elvégzett javítások.
 
 **Admin – Keycloak Admin API (`feature/qa-admin` ág):**
 - **Az admin felhasználólista 401-et adott (UC16).** A `futoedzes-identity-admin` service account tokenjéből hiányzott a **`kc-admin-api`** client scope, amit a Keycloak 26 az Admin REST API-hoz megkövetel (ez adja a tokenhez a szükséges audience-t). Emiatt az Admin API minden hívást 401-gyel utasított el, hiába voltak meg a `realm-management` szerepkörök és a helyes audience. A token `scope` claimje üres/hiányos volt; a működő `admin-cli` tokené viszont tartalmazta a `kc-admin-api`-t. Javítás a realmben (`infra/keycloak/futoedzes-realm.json`): a kliens `defaultClientScopes` listájához bekerült a `kc-admin-api` (a `basic`, `roles` mellé). **Fontos:** a realm csak friss Keycloak-DB-vel importálódik újra (`docker compose down` + `docker volume rm futoedzes_keycloak-db-data` + `up`), mert a `--import-realm` a meglévő realmet kihagyja.
+- **Fix felhasználói ID-k a realmben.** Eddig csak a `coach@` és a `demo-*` felhasználóknak volt fix `id`-juk a realm-JSON-ban; az `admin@`, `runner@`, `runner2@` minden Keycloak-újraimportnál új ID-t kapott. Ha közben a Training/Analytics/Identity adatbázisok megmaradtak (csak a Keycloak DB-t dobtuk el), az ezekben lévő, régi ID-ra hivatkozó adatok elárvultak: a friss login üres nézetet adott, miközben az edzői nézet a régi ID adatait mutatta. Nem alkalmazás-hiba, hanem az ismételt Keycloak-DB-eldobás artefaktja. Javítás: minden demó-felhasználó fix `id`-t kapott (`a0…` admin, `b0…` runnerek, a meglévő `c0…` coach / `d0…` demók mellé), így az újraimport nem változtatja meg őket.
 
 Ellenőrzés: frontend `npm run lint` / `npm run build` / `npm test` (53 teszt) zöld; backend `dotnet test` (195 teszt) zöld. Az admin felhasználólista friss DB-ből importált configgal is betölt (a token-próba 200).
 
 ### Nyitott (terméki) kérdések
 - **Függő meghívók kezelése.** Az edző bármilyen, akár nem létező e-mail címre küldhet meghívót (pl. elgépelt cím), és az „függőben” marad időkorlát nélkül; az edző nem tudja visszavonni. A spec szerint a meghívó az e-mail címhez kötődik (később regisztráló felhasználóhoz is), ezért ez önmagában nem hiba, de UX-ből zavaró. Eldöntendő: kell-e a függő meghívók visszavonása és/vagy lejárata. Egyelőre nincs implementálva.
 
+### Admin szerepkör – végigtesztelve (2026-11-25)
+- **UC16:** a felhasználólista betölt, keresés működik, a szerepkör-módosítás és a letiltás is (a letiltott nem tud belépni). A saját admin sor védett (a szerepköre és az aktív kapcsolója tiltott).
+- **UC17:** a szabály-küszöbök módosíthatók, a min/max korlátok működnek; a szabály ki-/bekapcsolható.
+- **UC18:** a demóadatok létrehozása és törlése működik; a 4 demó-futó a `coach@`-nál eltérő kockázattal jelenik meg, és a **kockázat szerinti rendezés (UC14)** mindkét irányban rendez.
+
 ### Még hátra a QA-ból
-- **Admin szerepkör (UC16–UC18):** a felhasználólista már betölt (lásd a `kc-admin-api` javítást). Hátra: a keresés, szerepkör-módosítás és letiltás kipróbálása (a saját sor védett), a szabály-küszöbök (UC17), és a demóadatok (UC18).
-- **Kockázat szerinti rendezés (UC14):** több futóval, a demóadatokkal ellenőrizendő.
 - **UC19 (kihagyott edzés):** óránkénti háttérjob, külön időzített teszt.
 - **Jogosultság közvetlen API-hívásokkal, reszponzivitás és a négy böngésző** (8. fejezet).
+
+> **Teszt-higiénia:** ha a Keycloak DB-t eldobod (pl. realm-újraimporthoz), a konzisztencia érdekében dobd el az összes adat-volume-ot is együtt: `docker compose down -v && docker compose up -d --build`. Így nem marad régi felhasználói ID-ra hivatkozó, elárvult adat a Training/Analytics/Identity adatbázisokban.
 
 ## 8. Mit kell mindenképpen tesztelni
 

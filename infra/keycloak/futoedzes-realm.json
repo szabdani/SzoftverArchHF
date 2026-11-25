@@ -100,6 +100,7 @@
   ],
   "users": [
     {
+      "id": "a0000000-0000-4000-8000-000000000001",
       "username": "admin@futoedzes.local",
       "email": "admin@futoedzes.local",
       "emailVerified": true,
@@ -137,6 +138,7 @@
       "id": "c0000000-0000-4000-8000-000000000001"
     },
     {
+      "id": "b0000000-0000-4000-8000-000000000001",
       "username": "runner@futoedzes.local",
       "email": "runner@futoedzes.local",
       "emailVerified": true,
@@ -155,6 +157,7 @@
       ]
     },
     {
+      "id": "b0000000-0000-4000-8000-000000000002",
       "username": "runner2@futoedzes.local",
       "email": "runner2@futoedzes.local",
       "emailVerified": true,
