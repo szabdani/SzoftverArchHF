@@ -209,8 +209,7 @@ A tesztelés közben felmerült beviteli finomítások, tisztán a frontenden (�
 Ellenőrzés: frontend `npm run lint` / `npm run build` / `npm test` (53 teszt) zöld; backend `dotnet test` (195 teszt) zöld.
 
 ### Még hátra a QA-ból
-- **Edző szerepkör (UC12, UC14):** meghívás, futók áttekintése kockázat szerint, a futó csak olvasható oldala, tervkészítés a futónak.
-- **Futó–edző kapcsolat futó-oldalról (UC13):** a meghívás elfogadása és a kapcsolat megszüntetése (edzői meghívás után tesztelhető).
+- **Edző szerepkör (UC12, UC13, UC14):** meghívás, elfogadás/megszüntetés, a futó csak olvasható oldala és a tervkészítés **kész** (lásd a 8. fejezet „Edző” szakaszát). Hátra: a **kockázat szerinti rendezés** több futóval, a demóadatokkal.
 - **Admin szerepkör (UC16–UC18):** felhasználók/szerepkörök, szabály-küszöbök, demóadatok.
 - **UC19 (kihagyott edzés):** óránkénti háttérjob, külön időzített teszt.
 - **Jogosultság közvetlen API-hívásokkal, reszponzivitás és a négy böngésző** (8. fejezet).
