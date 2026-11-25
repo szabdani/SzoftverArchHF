@@ -209,8 +209,7 @@ A tesztelés közben felmerült beviteli finomítások, tisztán a frontenden (�
 Ellenőrzés: frontend `npm run lint` / `npm run build` / `npm test` (53 teszt) zöld; backend `dotnet test` (195 teszt) zöld.
 
 ### Még hátra a QA-ból
-- **Edző szerepkör (UC12, UC14):** meghívás, futók áttekintése kockázat szerint, a futó csak olvasható oldala, tervkészítés a futónak.
-- **Futó–edző kapcsolat futó-oldalról (UC13):** a meghívás elfogadása és a kapcsolat megszüntetése (edzői meghívás után tesztelhető).
+- **Edző szerepkör (UC12, UC13, UC14):** meghívás, elfogadás/megszüntetés, a futó csak olvasható oldala és a tervkészítés **kész** (lásd a 8. fejezet „Edző” szakaszát). Hátra: a **kockázat szerinti rendezés** több futóval, a demóadatokkal.
 - **Admin szerepkör (UC16–UC18):** felhasználók/szerepkörök, szabály-küszöbök, demóadatok.
 - **UC19 (kihagyott edzés):** óránkénti háttérjob, külön időzített teszt.
 - **Jogosultság közvetlen API-hívásokkal, reszponzivitás és a négy böngésző** (8. fejezet).
@@ -251,9 +250,16 @@ Ellenőrzés: frontend `npm run lint` / `npm run build` / `npm test` (53 teszt) 
 
 ### Edző
 
-- [ ] A meghívás a futó e-mail címére → a futó az „Edzőim” oldalon elfogadja → a futó megjelenik az edző „Futóim” listájában.
-- [ ] A „Futóim” lista kockázat szerint rendezhető; a futó oldalán látszik a dashboard, az edzésnapló és a célok (csak olvasható), a naptárban pedig az edző tervet készíthet.
-- [ ] Ha a futó megszünteti a kapcsolatot, az edző azonnal elveszíti a hozzáférést (a futó oldala és az API is elutasítja).
+- [x] A meghívás a futó e-mail címére → a futó az „Edzőim” oldalon elfogadja → a futó megjelenik az edző „Futóim” listájában. *(2026-11-25: működik. A saját cím meghívása 409-et ad; ismételt meghívás függő/élő kapcsolatnál 409; érvénytelen e-mail mezőhibát ad.)*
+- [ ] A „Futóim” lista kockázat szerint rendezhető; a futó oldalán látszik a dashboard, az edzésnapló és a célok (csak olvasható), a naptárban pedig az edző tervet készíthet. *(2026-11-25: a futó oldala csak olvasható az edzésnaplón és a céloknál, a naptárban az edző tervet/tervezett edzést készíthet, módosíthat, törölhet – rendben. A kockázat szerinti rendezés demóadatokkal, több futóval ellenőrizendő.)*
+- [x] Ha a futó megszünteti a kapcsolatot, az edző azonnal elveszíti a hozzáférést (a futó oldala és az API is elutasítja). *(2026-11-25: a futó megszüntette, a Futóim listából eltűnt; nem hozzárendelt futó oldala „nincs hozzád rendelve” figyelmeztetést ad, az API 404-gyel véd.)*
+
+#### Edzői QA – döntések és megjegyzések (2026-11-25)
+
+- **A kapcsolatot csak a futó szüntetheti meg**, az edző nem (a `DELETE /api/identity/links/{id}` végpont `Runner` policy-vel védett). Ez megfelel a spec 3.1-nek: „a futó bármikor megszüntetheti”. Nem hiba, hogy az edzőnél nincs ilyen gomb.
+- **Az edző a hozzárendelt futó figyelmeztetéseit nyugtázhatja** a futó áttekintő oldaláról (spec 3.1: „megtekintés, nyugtázás – hozzárendelt futóké”). Szándékos.
+- **Elvégzett QA-javítás (ezen az ágon, UC12/UC13):** a futó belépéskor eddig semmilyen jelzést nem kapott a függő edzői meghívóról (csak az „Edzőim” oldalon látta). Mostantól az „Edzőim” menüponton számláló-badge mutatja a függő meghívók számát, és belépés után egyszeri értesítés is felhívja rá a figyelmet. Tisztán frontend (`src/app/usePendingInvitations.ts`, `AppLayout`).
+- **Nyitott (terméki) kérdés – függő meghívók kezelése:** jelenleg az edző bármilyen, akár nem létező e-mail címre küldhet meghívót (pl. elgépelt cím), és az „függőben” marad időkorlát nélkül; az edző nem tudja visszavonni. A spec szerint a meghívó az e-mail címhez kötődik (később regisztráló felhasználóhoz is), ezért ez önmagában nem hiba, de UX-ből zavaró. Eldöntendő: kell-e a függő meghívók visszavonása és/vagy lejárata. Egyelőre nincs implementálva.
 
 ### Admin
 
