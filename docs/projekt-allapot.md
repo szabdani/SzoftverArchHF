@@ -12,7 +12,7 @@
 - **A frontend kész** mindhárom szerepkörre (futó, edző, admin).
 - **Docker Compose:** egy paranccsal indul a teljes rendszer, a frontenddel együtt.
 - **Minden a `main`-ben van** (PR #1–#22, merge-elve 2026-11-24-én); nyitott PR nincs.
-- **Elindult az élő, böngészős QA (2026-11-25):** a rendszer most már futott együtt Dockerben (Traefik + Keycloak + RabbitMQ + 3 adatbázis + 3 API + frontend), és a futó-oldali use-case-eket végigjártuk böngészőből. A részletek és az eddigi javítások a 7.5 fejezetben.
+- **Az élő, böngészős QA lezárult (2026-11-25):** a rendszer együtt futott Dockerben (Traefik + Keycloak + RabbitMQ + 3 adatbázis + 3 API + frontend), mind a 20 use-case és a jogosultsági modell élőben tesztelve, a talált hibák javítva (külön PR-okban, lásd 7.6). Playwright E2E tesztek is készültek, zölden futnak. A részletek a 7.5 fejezetben; a megmaradt pontok környezeti korlátok (iOS/Safari, valódi telefonos belépés) és a még hiányzó backend integrációs tesztek (Testcontainers).
 
 ## 2. Mi alapján haladtunk
 
@@ -182,9 +182,9 @@ docker compose up --build   # felület: http://localhost
    - az edzőnek nincs összesített figyelmeztetés-listája az összes futóról, csak futónként (a futó oldalán);
    - a frontend egyetlen nagy JS-csomag (a build figyelmeztet az 500 kB fölötti méretre), kódfelosztás nincs.
 
-## 7.5 Élő QA tesztelés (folyamatban, 2026-11-25)
+## 7.5 Élő QA tesztelés – lezárva (2026-11-25)
 
-A rendszert `docker compose up --build` után böngészőből, a `http://localhost` címen teszteljük, a 8. fejezet checklistje szerint. Az eddigi állás:
+A rendszert `docker compose up --build` után böngészőből, a `http://localhost` címen végigteszteltük, a 8. fejezet checklistje szerint. Mind a 20 use-case és a jogosultsági modell élőben igazolt; a talált hibák javítva (lásd az „Elvégzett QA-javítások” részt és a 7.6 PR-összefoglalót). Automata E2E (Playwright) is készült. A megmaradt pontok környezeti korlátok (iOS/Safari, valódi telefonos belépés) és a még hiányzó backend integrációs tesztek (Testcontainers).
 
 ### Indulás és infrastruktúra – rendben
 - Mind a 11 konténer elindul, az API-k lefuttatják a migrációkat, a Keycloak importálja a `futoedzes` realmet, a Traefik jól irányít (`/`, `/api/*`, `/auth`).
@@ -256,7 +256,8 @@ Két környezeti korlát (nem a felület hibája):
 - **Valódi telefonos belépés más hálózati címről nem működik.** A dev-környezet a `localhost`-ra van szabva: a frontend OIDC `authority`-ja és a Keycloak `KC_HOSTNAME`-je is `http://localhost/auth`. Ezért a géped IP-jén (`http://192.168.x.y`) megnyitva a telefon a Keycloak-konfigot a saját `localhost`-ján keresi → `Failed to fetch`, a login-képernyőig sem jut el. Éles környezetben valódi hostname + HTTPS oldja meg; dev-ben csak ideiglenes, nem committolandó IP-s override-dal lenne kipróbálható (a frontend authority + a Keycloak hostname + a kliens `redirectUris`/`webOrigins` átírásával).
 - **Safari (macOS/iOS) nincs tesztelve**, mert a rendelkezésre álló eszköz Windows (a Safari for Windows megszűnt). Mac/iPhone-on vagy böngésző-tesztszolgáltatással pótolható, ha a csapat igényli.
 
-### Automata E2E tesztek (Playwright) – elkészült (2026-11-25, `feature/qa-e2e` ág)
+### Automata E2E tesztek (Playwright) – elkészült és zölden lefutott (2026-11-25, `feature/qa-e2e` ág)
+A 6 teszt a teljes, Docker Compose-zal futó rendszer ellen, valódi Chromiumban lefutott (mind zöld). A token-injektálásos belépés igazoltan működik mindhárom szerepkörnél.
 A `frontend/e2e/` alatt Playwright E2E tesztek futnak a **futó rendszer** ellen, **token-injektálásos** belépéssel: a teszt a Keycloaktól jelszavas folyamattal tokent kér, és a `sessionStorage`-ba írja az oidc-client-ts `User` alakjában (`oidc.user:<authority>:<clientId>` kulcs) — így nem kell a Keycloak űrlapján át belépni, a tesztek gyorsak és stabilak.
 - Lefedett folyamatok: futó belépés + áttekintő + menü, edzésnapló; edzésrögzítés (érvényes + érvénytelen → mezőhiba); admin demóadatok + az edzői „Futóim” lista a demó futók kockázatával.
 - Futtatás helyben: `docker compose up -d --build`, majd a `frontend/`-ben `npm run test:e2e` (lásd `frontend/e2e/README.md`).
@@ -267,6 +268,19 @@ A `frontend/e2e/` alatt Playwright E2E tesztek futnak a **futó rendszer** ellen
 - Nyitott: a valódi iOS/Safari eszközös és a valódi telefonos belépés (környezeti korlátok, lásd fent), valamint a backend **integrációs tesztek (Testcontainers)**, amelyek a repóban még nincsenek. Az E2E alapcsomag már megvan (lásd fent); bővíthető további folyamatokkal (naptár-húzás, figyelmeztetés-nyugtázás, kapcsolat megszüntetése).
 
 > **Teszt-higiénia:** ha a Keycloak DB-t eldobod (pl. realm-újraimporthoz), a konzisztencia érdekében dobd el az összes adat-volume-ot is együtt: `docker compose down -v && docker compose up -d --build`. Így nem marad régi felhasználói ID-ra hivatkozó, elárvult adat a Training/Analytics/Identity adatbázisokban.
+
+## 7.6 A QA-munka pull requestjei
+
+A QA (élő tesztelés + a talált hibák javítása) külön `feature/qa-*` ágakon, use-case-témánként, mindegyik önállóan review-zható PR-ként készült. A `main`-be mergelve:
+
+| PR | Ág | Tartalom |
+|---|---|---|
+| #23 | `feature/qa-workout-form` | UC02/UC05/UC08/UC11: a futó-oldali űrlapok beviteli finomításai – közös `DurationInput` (óra/perc/mp), a számmezők határsértése validációs hibaüzenetként (nem néma klamp), a célidő felső határa 10 órára egységesítve (backend + séma + kliens), és az edzés-űrlap kitöltése a kiválasztott tervezett edzésből. |
+| #24 | `feature/qa-coach` | UC12/UC13/UC14: az edzői folyamat tesztelése; javítás: a futó belépéskor badge + értesítés a függő edzői meghívóról (`usePendingInvitations`). |
+| #25 | `feature/qa-admin` | UC16–UC18: az admin folyamat tesztelése; javítások: a Keycloak Admin API 401 megoldása a `kc-admin-api` client scope-pal, fix felhasználói ID-k a realmben, és szerepkörváltás-értesítés (`useRoleChangeNotice`). A docs itt kapta meg a jogosultsági API-tesztek, az UC19/UC20 és a reszponzivitás eredményeit. |
+| #26 (nyitott) | `feature/qa-e2e` | Playwright E2E tesztek a futó rendszer ellen (token-injektálásos belépés), CI-jobbal. |
+
+A korábbi #1–#22 PR-ok a backend (infrastruktúra, use-case-ek, közös validációs séma) és a frontend (három szerepkör felülete, konténer) munkái, valamint a projektállapot-dokumentum – ezek a QA előtt készültek.
 
 ## 8. Mit kell mindenképpen tesztelni
 
