@@ -76,14 +76,14 @@ public class GoalValidatorTests
     }
 
     /// <summary>
-    /// A célidő opcionális, 1 perc és 23:59:59 között, egész másodpercre (egy nap már nem óó:pp:mm).
+    /// A célidő opcionális, 1 perc és 10 óra között, egész másodpercre (az edzés időtartamával egyezően).
     /// </summary>
     [Theory]
     [InlineData(null, true)]
     [InlineData(59.0, false)]
     [InlineData(60.0, true)]
-    [InlineData(86_399.0, true)]
-    [InlineData(86_400.0, false)]
+    [InlineData(36_000.0, true)]
+    [InlineData(36_060.0, false)]
     [InlineData(90.5, false)]
     public void TargetTime_Rules(double? seconds, bool expectedValid)
     {

@@ -1,6 +1,6 @@
 # Projektállapot – kontextus AI-asszisztenseknek és új csapattagoknak
 
-> **Utoljára frissítve:** 2026-11-24.
+> **Utoljára frissítve:** 2026-11-25.
 >
 > Ez a fájl leírja, hol tart a projekt, milyen döntések alapján készült, és mit kell még mindenképpen tesztelni. Ha a git history vagy a GitHub (PR-ok, merge-ek) mást mutat, **azok az irányadók**, és ezt a fájlt frissíteni kell.
 
@@ -12,7 +12,7 @@
 - **A frontend kész** mindhárom szerepkörre (futó, edző, admin).
 - **Docker Compose:** egy paranccsal indul a teljes rendszer, a frontenddel együtt.
 - **Minden a `main`-ben van** (PR #1–#22, merge-elve 2026-11-24-én); nyitott PR nincs.
-- **A legfontosabb hiány: a rendszer még egyszer sem futott együtt élőben** (Docker + böngésző + Keycloak). Minden ellenőrzés build, lint, egységteszt és CI volt. Ezért kiemelten fontos a 8. fejezet.
+- **Elindult az élő, böngészős QA (2026-11-25):** a rendszer most már futott együtt Dockerben (Traefik + Keycloak + RabbitMQ + 3 adatbázis + 3 API + frontend), és a futó-oldali use-case-eket végigjártuk böngészőből. A részletek és az eddigi javítások a 7.5 fejezetben.
 
 ## 2. Mi alapján haladtunk
 
@@ -182,6 +182,39 @@ docker compose up --build   # felület: http://localhost
    - az edzőnek nincs összesített figyelmeztetés-listája az összes futóról, csak futónként (a futó oldalán);
    - a frontend egyetlen nagy JS-csomag (a build figyelmeztet az 500 kB fölötti méretre), kódfelosztás nincs.
 
+## 7.5 Élő QA tesztelés (folyamatban, 2026-11-25)
+
+A rendszert `docker compose up --build` után böngészőből, a `http://localhost` címen teszteljük, a 8. fejezet checklistje szerint. Az eddigi állás:
+
+### Indulás és infrastruktúra – rendben
+- Mind a 11 konténer elindul, az API-k lefuttatják a migrációkat, a Keycloak importálja a `futoedzes` realmet, a Traefik jól irányít (`/`, `/api/*`, `/auth`).
+- Az `Europe/Budapest` időzóna elérhető az API-konténerekben (`/usr/share/zoneinfo/Europe/Budapest` megvan), így a dátumfüggő hívások nem szállnak el.
+- **Ismert, nem blokkoló zaj a logban:** `Cannot load library libgssapi_krb5.so.2` – az Npgsql GSSAPI-ágát keresi, amit nem használunk (jelszavas kapcsolat). A migrációk és minden DB-művelet ettől függetlenül lefut. Ha zavaró, a három API Dockerfile-jába telepíthető a `libgssapi-krb5-2`.
+
+### Futó szerepkör – végigtesztelve, a spec szerint működik
+Kipróbált use-case-ek: UC01 (bejelentkezés), UC02/UC03 (edzés rögzítése/szerkesztése), UC05 (célok), UC06 (dashboard), UC07 (naptár), UC08 (tervezett edzés teljesítése), UC09 (figyelmeztetések), UC10 (javaslat), UC11 (edzésterv + húzás), UC15 (kockázati pontszám).
+
+Megjegyzések a viselkedésről (szándékos, nem hiba):
+- A figyelmeztetések mindig a **mai naphoz** képest, visszatekintő ablakokkal értékelődnek (utolsó 7 nap / mai ISO hét). Régebbi hetekre visszamenőleg nincs figyelmeztetés (spec 3.6). A heti deduplikáció miatt ugyanaz a szabály egy ISO hétre csak egyszer generál figyelmeztetést; másik szabály (pl. ACWR kritikus) ettől függetlenül jöhet. A nyugtázás nem éleszti újra a figyelmeztetést.
+- Mindhárom súlyossági szint előállt élesben (információ / figyelmeztetés / kritikus).
+- A validáció a szerverrel közös sémából mezőnkénti hibaüzenetként jelenik meg; a számmezők felső határának megsértése is így látszik (nincs néma visszaállítás).
+
+### Elvégzett QA-javítások (a `feature/qa-workout-form` ágon, futó-oldali űrlapok)
+A tesztelés közben felmerült beviteli finomítások, tisztán a frontenden (és egy backend-validáció egységesítése):
+- **Idő-bevitel három mezővel.** Az edzés időtartama, a cél célideje és a tervezett edzés tervezett időtartama egy közös `DurationInput` komponenssel (óra / perc / másodperc, fel-le nyíllal) adható meg a korábbi `óó:pp:mm` szöveges mező helyett. A komponens a `src/lib/DurationInput.tsx`-ben van; a form belső reprezentációja (`óó:pp:mm` string) és a szerverrel közös validáció változatlan.
+- **Számmezők határai.** Az edzés-űrlap számmezőin nincs néma felső klampolás: a határsértés submitkor mezőnkénti magyar hibaüzenetként jelenik meg (a spec „kliens és szerver ugyanazzal a sémával validál” elve szerint).
+- **Célidő felső határa 10 óra.** Korábban 23:59:59 volt; egységesítve az edzés időtartamával (1 perc–10 óra). Backend DTO + minta + egységteszt módosult, a `Duration1MinTo24Hours` minta törölve, a séma és a frontend kliens újragenerálva.
+- **UC08 kitöltés.** Az edzés rögzítésekor egy tervezett edzés kiválasztása kitölti az űrlapot annak értékeiből (típus, táv, időtartam, cél RPE, megjegyzés); a pulzust és az emelkedést a futó tölti, a választás törlése a már beírt értékeket nem bántja.
+
+Ellenőrzés: frontend `npm run lint` / `npm run build` / `npm test` (53 teszt) zöld; backend `dotnet test` (195 teszt) zöld.
+
+### Még hátra a QA-ból
+- **Edző szerepkör (UC12, UC14):** meghívás, futók áttekintése kockázat szerint, a futó csak olvasható oldala, tervkészítés a futónak.
+- **Futó–edző kapcsolat futó-oldalról (UC13):** a meghívás elfogadása és a kapcsolat megszüntetése (edzői meghívás után tesztelhető).
+- **Admin szerepkör (UC16–UC18):** felhasználók/szerepkörök, szabály-küszöbök, demóadatok.
+- **UC19 (kihagyott edzés):** óránkénti háttérjob, külön időzített teszt.
+- **Jogosultság közvetlen API-hívásokkal, reszponzivitás és a négy böngésző** (8. fejezet).
+
 ## 8. Mit kell mindenképpen tesztelni
 
 Élőben, `docker compose up --build` után, a `http://localhost` címen. A felhasználók a README-ben vannak.
@@ -202,20 +235,19 @@ docker compose up --build   # felület: http://localhost
 
 ### Eseményvezérelt frissülés (a legkockázatosabb pont)
 
-- [ ] Edzés mentése, módosítása és törlése után frissül a dashboard, a kockázati pontszám, a javaslat és a figyelmeztetések.
-  - Az Analytics az eseményt aszinkron dolgozza fel, a felület viszont a mentés után azonnal újrakérdez, így elsőre régi adatot láthat.
-  - Ha ez előjön, a felületen kell javítani (pl. rövid késleltetés vagy újrapróbálás).
-- [ ] Tervezett edzés teljesítése (UC08): az edzés-űrlapon az aznapi tervezett edzéshez kötve az teljesítettre vált a naptárban és a terv–tény diagramon.
+- [x] Edzés mentése, módosítása és törlése után frissül a dashboard, a kockázati pontszám, a javaslat és a figyelmeztetések. *(2026-11-25: a mentés után azonnal, F5 nélkül frissült – a tartott kockázat nem lett elavult. A felvett terhelésugrásra a dashboard, a kockázat (40/KÖZEPES, majd ACWR > 1,5 kritikus), a javaslat és a figyelmeztetések is helyesen reagáltak.)*
+  - Az Analytics az eseményt aszinkron dolgozza fel, a felület viszont a mentés után azonnal újrakérdez, így elsőre elvileg régi adatot láthat. A tesztben ez nem fordult elő, de versenyhelyzet maradhat; ha valaha előjön, a felületen kell javítani (pl. rövid késleltetés vagy újrapróbálás).
+- [x] Tervezett edzés teljesítése (UC08): az edzés-űrlapon az aznapi tervezett edzéshez kötve az teljesítettre vált a naptárban és a terv–tény diagramon. *(2026-11-25: a mentés után azonnal frissül, F5 nélkül; a tervezett edzés kiválasztása ki is tölti az űrlapot.)*
 
 ### Futó
 
-- [ ] Edzésrögzítés validációja: kliens és szerver ugyanazt utasítja el (jövőbeli dátum, `10:00:01` időtartam, 0 km, 501 karakteres megjegyzés). A szerverhibák a mezőknél jelennek meg.
-- [ ] Célok: egy aktív cél lehet, az újtól a régi archiválódik; látszik a hátralévő hetek száma.
-- [ ] Naptár: havi és heti nézet; a tervezett, teljesített és kihagyott edzés eltérő jelöléssel.
-  - **Húzás:** a terv időszakán belül mentődik, kívül hibaüzenettel visszaugrik.
-  - Mobilon érintéssel is kipróbálandó.
+- [x] Edzésrögzítés validációja: kliens és szerver ugyanazt utasítja el (jövőbeli dátum, `10:00:01` időtartam, 0 km, 501 karakteres megjegyzés). A szerverhibák a mezőknél jelennek meg.
+- [x] Célok: egy aktív cél lehet, az újtól a régi archiválódik; látszik a hátralévő hetek száma.
+- [x] Naptár: havi és heti nézet; a tervezett, teljesített és kihagyott edzés eltérő jelöléssel.
+  - **Húzás:** a terv időszakán belül mentődik, kívül hibaüzenettel visszaugrik. *(2026-11-25: a terv időszakán kívülre húzva visszaugrik – rendben.)*
+  - Mobilon érintéssel is kipróbálandó. *(még hátra)*
 - [ ] Kihagyott edzés (UC19): egy múltbeli, nem teljesített tervezett edzés legkésőbb egy órán belül „kihagyott” lesz; hetente legalább 2 esetén figyelmeztetés jön.
-- [ ] Figyelmeztetés nyugtázása; ugyanaz a szabály ugyanazon a héten nem jön újra.
+- [x] Figyelmeztetés nyugtázása; ugyanaz a szabály ugyanazon a héten nem jön újra. *(2026-11-25: nyugtázás, „nyugtázottak is” kapcsoló és heti dedup is a spec szerint.)*
 
 ### Edző
 

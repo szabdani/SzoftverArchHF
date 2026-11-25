@@ -1,4 +1,4 @@
-import { Button, Group, Modal, NumberInput, Select, SimpleGrid, Stack, Text, TextInput, Textarea } from '@mantine/core';
+import { Button, Group, Modal, NumberInput, Select, SimpleGrid, Stack, Text, Textarea } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
@@ -8,6 +8,7 @@ import { errorMessage } from '../../api/apiError';
 import { getApiTrainingPlannedWorkouts, postApiTrainingWorkouts, putApiTrainingWorkoutsById } from '../../api/training/sdk.gen';
 import type { WorkoutRequest, WorkoutResponse, WorkoutType } from '../../api/training/types.gen';
 import { calculateLoad, calculatePace, formatKm, formatPace, parseDuration, workoutTypeLabels } from '../../lib/format';
+import { DurationInput } from '../../lib/DurationInput';
 import { applyServerErrors } from '../../lib/serverErrors';
 import { emptyWorkoutForm, toWorkoutRequest, validateWorkout, workoutToFormValues } from './workoutForm';
 
@@ -58,6 +59,25 @@ export function WorkoutFormModal({ opened, onClose, workout }: { opened: boolean
     },
   });
 
+  /**
+   * Tervezett edzés választásakor az űrlap kitöltődik annak értékeiből (UC08): típus, táv, időtartam,
+   * cél RPE és megjegyzés. A pulzus és az emelkedés nincs a tervben, azt a futó tölti ki. Törléskor csak
+   * a kapcsolat szűnik meg, a már beírt értékek maradnak.
+   */
+  const handlePlannedChange = (value: string | null) => {
+    form.setFieldValue('plannedWorkoutId', value);
+    const planned = (plannedQuery.data ?? []).find((item) => item.id === value);
+    if (!planned) {
+      return;
+    }
+
+    form.setFieldValue('type', planned.type);
+    form.setFieldValue('distanceKm', planned.plannedDistanceKm ?? '');
+    form.setFieldValue('duration', planned.plannedDuration ?? '');
+    form.setFieldValue('rpe', planned.targetRpe);
+    form.setFieldValue('note', planned.note ?? '');
+  };
+
   // Élő előnézet: tempó és edzésterhelés, ha a táv, az idő és az RPE már értelmezhető.
   const seconds = parseDuration(form.values.duration);
   const distance = Number(form.values.distanceKm);
@@ -80,12 +100,19 @@ export function WorkoutFormModal({ opened, onClose, workout }: { opened: boolean
               onChange={(value) => form.setFieldValue('type', value as WorkoutType | null)}
             />
             <NumberInput label="Táv (km)" withAsterisk min={0} decimalScale={2} decimalSeparator="," key={form.key('distanceKm')} {...form.getInputProps('distanceKm')} />
-            <TextInput label="Időtartam" placeholder="óó:pp:mm" withAsterisk key={form.key('duration')} {...form.getInputProps('duration')} />
+            <DurationInput label="Időtartam" withAsterisk value={form.values.duration} onChange={(next) => form.setFieldValue('duration', next)} error={form.errors.duration} />
             <NumberInput label="Átlagpulzus (ütés/perc)" min={0} allowDecimal={false} key={form.key('avgHeartRate')} {...form.getInputProps('avgHeartRate')} />
             <NumberInput label="Emelkedés (m)" min={0} allowDecimal={false} key={form.key('elevationGainM')} {...form.getInputProps('elevationGainM')} />
-            <NumberInput label="RPE (érzett terhelés, 1–10)" withAsterisk min={1} max={10} allowDecimal={false} key={form.key('rpe')} {...form.getInputProps('rpe')} />
+            <NumberInput label="RPE (érzett terhelés, 1–10)" withAsterisk min={1} allowDecimal={false} key={form.key('rpe')} {...form.getInputProps('rpe')} />
             {plannedOptions.length > 0 && (
-              <Select label="Tervezett edzés (opcionális)" data={plannedOptions} clearable key={form.key('plannedWorkoutId')} {...form.getInputProps('plannedWorkoutId')} />
+              <Select
+                label="Tervezett edzés (opcionális)"
+                data={plannedOptions}
+                clearable
+                key={form.key('plannedWorkoutId')}
+                {...form.getInputProps('plannedWorkoutId')}
+                onChange={handlePlannedChange}
+              />
             )}
           </SimpleGrid>
           <Textarea label="Megjegyzés" autosize minRows={2} key={form.key('note')} {...form.getInputProps('note')} />
