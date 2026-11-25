@@ -59,6 +59,25 @@ export function WorkoutFormModal({ opened, onClose, workout }: { opened: boolean
     },
   });
 
+  /**
+   * Tervezett edzés választásakor az űrlap kitöltődik annak értékeiből (UC08): típus, táv, időtartam,
+   * cél RPE és megjegyzés. A pulzus és az emelkedés nincs a tervben, azt a futó tölti ki. Törléskor csak
+   * a kapcsolat szűnik meg, a már beírt értékek maradnak.
+   */
+  const handlePlannedChange = (value: string | null) => {
+    form.setFieldValue('plannedWorkoutId', value);
+    const planned = (plannedQuery.data ?? []).find((item) => item.id === value);
+    if (!planned) {
+      return;
+    }
+
+    form.setFieldValue('type', planned.type);
+    form.setFieldValue('distanceKm', planned.plannedDistanceKm ?? '');
+    form.setFieldValue('duration', planned.plannedDuration ?? '');
+    form.setFieldValue('rpe', planned.targetRpe);
+    form.setFieldValue('note', planned.note ?? '');
+  };
+
   // Élő előnézet: tempó és edzésterhelés, ha a táv, az idő és az RPE már értelmezhető.
   const seconds = parseDuration(form.values.duration);
   const distance = Number(form.values.distanceKm);
@@ -86,7 +105,14 @@ export function WorkoutFormModal({ opened, onClose, workout }: { opened: boolean
             <NumberInput label="Emelkedés (m)" min={0} allowDecimal={false} key={form.key('elevationGainM')} {...form.getInputProps('elevationGainM')} />
             <NumberInput label="RPE (érzett terhelés, 1–10)" withAsterisk min={1} allowDecimal={false} key={form.key('rpe')} {...form.getInputProps('rpe')} />
             {plannedOptions.length > 0 && (
-              <Select label="Tervezett edzés (opcionális)" data={plannedOptions} clearable key={form.key('plannedWorkoutId')} {...form.getInputProps('plannedWorkoutId')} />
+              <Select
+                label="Tervezett edzés (opcionális)"
+                data={plannedOptions}
+                clearable
+                key={form.key('plannedWorkoutId')}
+                {...form.getInputProps('plannedWorkoutId')}
+                onChange={handlePlannedChange}
+              />
             )}
           </SimpleGrid>
           <Textarea label="Megjegyzés" autosize minRows={2} key={form.key('note')} {...form.getInputProps('note')} />

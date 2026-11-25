@@ -1,4 +1,4 @@
-import { Button, Group, Modal, NumberInput, Select, SimpleGrid, Stack, TextInput, Textarea } from '@mantine/core';
+import { Button, Group, Modal, NumberInput, Select, SimpleGrid, Stack, Textarea } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
@@ -11,6 +11,7 @@ import {
 } from '../../api/training/sdk.gen';
 import type { PlannedWorkoutRequest, PlannedWorkoutResponse, PlanResponse, WorkoutType } from '../../api/training/types.gen';
 import { formatDate, workoutTypeLabels } from '../../lib/format';
+import { DurationInput } from '../../lib/DurationInput';
 import { applyServerErrors } from '../../lib/serverErrors';
 import { plannedToFormValues, toPlannedWorkoutRequest, validatePlannedWorkout } from './planForms';
 
@@ -98,7 +99,12 @@ export function PlannedWorkoutFormModal({
             />
             <NumberInput label="Cél RPE (1–10)" withAsterisk min={1} max={10} allowDecimal={false} key={form.key('targetRpe')} {...form.getInputProps('targetRpe')} />
             <NumberInput label="Tervezett táv (km)" min={0} decimalScale={2} decimalSeparator="," key={form.key('plannedDistanceKm')} {...form.getInputProps('plannedDistanceKm')} />
-            <TextInput label="Tervezett időtartam" placeholder="óó:pp:mm" key={form.key('plannedDuration')} {...form.getInputProps('plannedDuration')} />
+            <DurationInput
+              label="Tervezett időtartam"
+              value={form.values.plannedDuration}
+              onChange={(next) => form.setFieldValue('plannedDuration', next)}
+              error={form.errors.plannedDuration}
+            />
           </SimpleGrid>
           <Textarea label="Megjegyzés" autosize minRows={2} key={form.key('note')} {...form.getInputProps('note')} />
           <Group justify="space-between">
