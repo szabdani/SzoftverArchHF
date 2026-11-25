@@ -80,11 +80,11 @@ export function WorkoutFormModal({ opened, onClose, workout }: { opened: boolean
               {...form.getInputProps('type')}
               onChange={(value) => form.setFieldValue('type', value as WorkoutType | null)}
             />
-            <NumberInput label="Táv (km)" withAsterisk min={0.1} max={100} decimalScale={2} decimalSeparator="," key={form.key('distanceKm')} {...form.getInputProps('distanceKm')} />
+            <NumberInput label="Táv (km)" withAsterisk min={0} decimalScale={2} decimalSeparator="," key={form.key('distanceKm')} {...form.getInputProps('distanceKm')} />
             <DurationInput label="Időtartam" withAsterisk value={form.values.duration} onChange={(next) => form.setFieldValue('duration', next)} error={form.errors.duration} />
-            <NumberInput label="Átlagpulzus (ütés/perc)" min={40} max={220} allowDecimal={false} key={form.key('avgHeartRate')} {...form.getInputProps('avgHeartRate')} />
-            <NumberInput label="Emelkedés (m)" min={0} max={5000} allowDecimal={false} key={form.key('elevationGainM')} {...form.getInputProps('elevationGainM')} />
-            <NumberInput label="RPE (érzett terhelés, 1–10)" withAsterisk min={1} max={10} allowDecimal={false} key={form.key('rpe')} {...form.getInputProps('rpe')} />
+            <NumberInput label="Átlagpulzus (ütés/perc)" min={0} allowDecimal={false} key={form.key('avgHeartRate')} {...form.getInputProps('avgHeartRate')} />
+            <NumberInput label="Emelkedés (m)" min={0} allowDecimal={false} key={form.key('elevationGainM')} {...form.getInputProps('elevationGainM')} />
+            <NumberInput label="RPE (érzett terhelés, 1–10)" withAsterisk min={1} allowDecimal={false} key={form.key('rpe')} {...form.getInputProps('rpe')} />
             {plannedOptions.length > 0 && (
               <Select label="Tervezett edzés (opcionális)" data={plannedOptions} clearable key={form.key('plannedWorkoutId')} {...form.getInputProps('plannedWorkoutId')} />
             )}
@@ -159,7 +159,7 @@ function DurationInput({
   return (
     <Input.Wrapper label={label} withAsterisk={withAsterisk} error={error}>
       <Group grow gap="xs" wrap="nowrap">
-        <NumberInput aria-label="Óra" placeholder="óra" min={0} max={10} allowDecimal={false} value={parts.hours} onChange={(v) => update({ hours: v })} />
+        <NumberInput aria-label="Óra" placeholder="óra" min={0} allowDecimal={false} value={parts.hours} onChange={(v) => update({ hours: v })} />
         <NumberInput aria-label="Perc" placeholder="perc" min={0} max={59} allowDecimal={false} value={parts.minutes} onChange={(v) => update({ minutes: v })} />
         <NumberInput aria-label="Másodperc" placeholder="mp" min={0} max={59} allowDecimal={false} value={parts.seconds} onChange={(v) => update({ seconds: v })} />
       </Group>
