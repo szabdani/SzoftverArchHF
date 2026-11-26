@@ -12,7 +12,7 @@
 - **A frontend kész** mindhárom szerepkörre (futó, edző, admin).
 - **Docker Compose:** egy paranccsal indul a teljes rendszer, a frontenddel együtt.
 - **Minden a `main`-ben van** (PR #1–#22, merge-elve 2026-11-24-én); nyitott PR nincs.
-- **Az élő, böngészős QA lezárult (2026-11-25):** a rendszer együtt futott Dockerben (Traefik + Keycloak + RabbitMQ + 3 adatbázis + 3 API + frontend), mind a 20 use-case és a jogosultsági modell élőben tesztelve, a talált hibák javítva (külön PR-okban, lásd a 3. fejezet PR-táblázatát). Playwright E2E tesztek is készültek, zölden futnak. A részletek a 8. fejezetben; a megmaradt pontok környezeti korlátok (iOS/Safari, valódi telefonos belépés) és a még hiányzó backend integrációs tesztek (Testcontainers).
+- **Az élő, böngészős QA lezárult (2026-11-25):** a rendszer együtt futott Dockerben (Traefik + Keycloak + RabbitMQ + 3 adatbázis + 3 API + frontend), mind a 20 use-case és a jogosultsági modell élőben tesztelve, a talált hibák javítva (külön PR-okban, lásd a 3. fejezet PR-táblázatát). Playwright E2E és backend integrációs tesztek (Testcontainers) is készültek, zölden futnak. A részletek a 8. fejezetben; a megmaradt pontok környezeti korlátok (iOS/Safari, valódi telefonos belépés).
 
 ## 2. Mi alapján haladtunk
 
@@ -60,7 +60,7 @@ Ahol a spec nem egyértelmű, ezek a döntések születtek. Ne írd át őket eg
 
 ## 3. Hol van a kód (ágak, PR-ok)
 
-**Minden a `main`-ben van** (a #26 E2E PR mergelésével együtt). A régi `feature/...` ágak megmaradtak a GitHubon, de már nem kellenek. Új munkát a `main`-ről induló új `feature/...` ágon kell kezdeni.
+**Minden a `main`-ben van** (a #27 integrációs teszt PR mergelésével együtt). A régi `feature/...` ágak megmaradtak a GitHubon, de már nem kellenek. Új munkát a `main`-ről induló új `feature/...` ágon kell kezdeni.
 
 A PR-ok, ha egy döntés hátterét kell visszakeresni (a PR-leírásokban részletes indoklás van):
 
@@ -80,6 +80,7 @@ A PR-ok, ha egy döntés hátterét kell visszakeresni (a PR-leírásokban rész
 | #24 | QA: edzői folyamat; javítás: badge + értesítés a futónak a függő edzői meghívóról (UC12/UC13/UC14) |
 | #25 | QA: admin folyamat; javítások: a Keycloak Admin API 401 megoldása a `kc-admin-api` scope-pal, fix felhasználói ID-k a realmben, szerepkörváltás-értesítés (UC16–UC18) |
 | #26 | QA: Playwright E2E tesztek (token-injektálásos belépés) és CI-job |
+| #27 | QA: backend integrációs tesztek (Testcontainers – valódi PostgreSQL + RabbitMQ) a Training→esemény→Analytics láncra, CI-jobbal |
 
 ### Use-case-ek lefedése
 
@@ -168,18 +169,15 @@ docker compose up --build   # felület: http://localhost
 ```
 
 **Tesztek a mostani állapotban:**
-- backend: 196 egységteszteset;
+- backend: 196 egységteszteset + 3 integrációs teszt (Testcontainers);
 - frontend: 53 egységteszt + 6 Playwright E2E teszt;
-- mind zöld, a CI is (az E2E a teljes rendszer ellen fut, lásd a 9. fejezetet).
+- mind zöld, a CI is (az E2E és az integrációs tesztek a valódi rendszer ellen futnak, lásd a 8–9. fejezetet).
 
 ## 7. Ami nincs kész, vagy ismert hiány
 
-A QA (élő, böngészős tesztelés) lezárult – az élő próba és a reszponzivitás-ellenőrzés megtörtént, lásd a 9. fejezetet. Ami még nyitott:
+A QA (élő, böngészős tesztelés) lezárult – az élő próba és a reszponzivitás-ellenőrzés megtörtént, és az automata teszt-lefedettség is kiegészült E2E-vel és integrációs tesztekkel (lásd a 8. fejezetet). Ami még nyitott:
 
-1. **Nincsenek backend integrációs tesztek (Testcontainers).**
-   - A backend tesztjei egységtesztek, adatbázis és broker nélkül; a frontend egységtesztjei mockolt API-val futnak.
-   - A szolgáltatások együttműködését valódi RabbitMQ/PostgreSQL ellen semmi nem teszteli automatikusan. (Böngészős **E2E viszont már van**, Playwrighttal – lásd a 9. fejezetet.)
-   - Javaslat: Testcontainers a backendhez, pl. edzés mentése → esemény → az Analytics újraszámol.
+1. **Az automata tesztek bővíthetők.** Már van böngészős E2E (Playwright) és backend integrációs teszt (Testcontainers, a Training→esemény→Analytics láncra); ezek a fő folyamatokat fedik. További folyamatokkal bővíthetők (pl. figyelmeztetés-generálás end-to-end, outbox-rollback, naptár-húzás, kapcsolat megszüntetése).
 2. **Valódi e-mail nem megy ki** a meghívásnál (lásd a 2. fejezetet). Ha a csapat igényli: Keycloak SMTP, vagy MailKit + egy Mailpit konténer.
 3. **Böngésző-/eszközkorlátok:** Chrome, Firefox, Edge (asztal + DevTools mobil nézet) rendben. A **Safari (macOS/iOS)** és a **valódi telefonos belépés** nincs lefedve – ez környezeti korlát (Windows gép; a dev-config `localhost`-ra fixált Keycloak-hostneve), nem a felület hibája. Részletek a 8. fejezet (QA) reszponzivitás-szakaszában.
 4. **Kisebb hiányok:**
@@ -189,7 +187,7 @@ A QA (élő, böngészős tesztelés) lezárult – az élő próba és a reszpo
 
 ## 8. Élő QA tesztelés – lezárva (2026-11-25)
 
-A rendszert `docker compose up --build` után böngészőből, a `http://localhost` címen végigteszteltük, a 9. fejezet checklistje szerint. Mind a 20 use-case és a jogosultsági modell élőben igazolt; a talált hibák javítva (lásd az „Elvégzett QA-javítások” részt és a 3. fejezet PR-táblázatát). Automata E2E (Playwright) is készült. A megmaradt pontok környezeti korlátok (iOS/Safari, valódi telefonos belépés) és a még hiányzó backend integrációs tesztek (Testcontainers).
+A rendszert `docker compose up --build` után böngészőből, a `http://localhost` címen végigteszteltük, a 9. fejezet checklistje szerint. Mind a 20 use-case és a jogosultsági modell élőben igazolt; a talált hibák javítva (lásd az „Elvégzett QA-javítások” részt és a 3. fejezet PR-táblázatát). Automata E2E (Playwright) és backend integrációs tesztek (Testcontainers) is készültek. A megmaradt pontok környezeti korlátok (iOS/Safari, valódi telefonos belépés).
 
 ### Indulás és infrastruktúra – rendben
 - Mind a 11 konténer elindul, az API-k lefuttatják a migrációkat, a Keycloak importálja a `futoedzes` realmet, a Traefik jól irányít (`/`, `/api/*`, `/auth`).
@@ -269,8 +267,24 @@ A `frontend/e2e/` alatt Playwright E2E tesztek futnak a **futó rendszer** ellen
 - CI: a `frontend.yml` külön `e2e` jobja felhozza a teljes rendszert Docker Compose-zal, megvárja a Keycloak/gateway készenlétét, és lefuttatja a Playwrightot; a riport artifactként mentődik.
 - Böngészők: alapból chromium; a firefox és a webkit (Safari-motor) projekt az `E2E_ALL_BROWSERS` beállítással kapcsolható be (a webkit részben a Safari-lefedettséget is adja).
 
+### Backend integrációs tesztek (Testcontainers) – elkészült és zölden lefutott (2026-11-25, `feature/qa-integration` ág)
+A `backend/tests/Integration.Tests/` projekt a Training→esemény→Analytics láncot teszteli **valódi PostgreSQL és RabbitMQ konténerek** ellen (Testcontainers), `WebApplicationFactory`-vel felhúzott Training és Analytics szolgáltatással.
+
+Lefedett láncok (3 teszt):
+- edzés mentése a Training API-n → `WorkoutRecorded` → az Analytics felveszi és újraszámolja a kockázatot (UC02/UC20);
+- `CoachRunnerLinked` → az edző hozzáfér a hozzárendelt futó adataihoz, előtte 403 (UC12–14);
+- `RunnerDataReset` → az Analytics törli a futó adatait (a demóadat-törlés lánca, UC18).
+
+A fejlesztés menete és tanulságai:
+- **Valódi bróker kell, nem in-memory harness.** A rendszer EF tranzakciós outboxot használ (`UseBusOutbox`), amit a MassTransit in-memory `ITestHarness` nem modellez hűen, ezért a megbízható, végpont-végpont ellenőrzéshez valódi RabbitMQ + PostgreSQL Testcontainers a helyes út. A teszt a célállapotra pollozik (az aszinkron feldolgozás miatt), nem feltételez azonnaliságot.
+- **Keycloak nélkül, fejléc-alapú teszt-auth.** A valódi JWT helyett egy teszt-hitelesítő séma a kérés fejléceiből (`X-Test-Sub`, `X-Test-Role`) állít elő principalt; a szerveroldali policy-k (`role` claim) és a `CanViewRunnerAsync` változatlanul működnek. Így a tesztek determinisztikusak és gyorsak.
+- **Két szolgáltatás, közös bróker.** A Training és az Analytics külön adatbázist kap ugyanazon a Postgres szerveren, de **közös RabbitMQ**-t, hogy az esemény ténylegesen átmenjen; az Identity által küldött eseményeket (`CoachRunnerLinked`, `RunnerDataReset`) egy önálló teszt-publisher busz szimulálja.
+- **Két apró forrásmódosítás volt szükséges** (a valós rendszert nem érinti): a `RabbitMqOptions` kapott egy `Port` mezőt (alap 5672; a Testcontainers dinamikus portjához kell), és mindkét API csproj `InternalsVisibleTo`-t kapott a teszt-assemblyre.
+- **A demóadat-generálás tanulsága:** a teljes `DemoDataRequested` (12 hét, ~60 edzés, egyesével újraszámolva, `ConcurrentMessageLimit = 1`) valós láncként működik, de szinkron kivárása percekig tart, ezért az integrációs teszt a demó **törlési** láncát (`RunnerDataReset`) a gyors úton igazolja; a generálást a Training egységtesztjei és az élő QA fedik.
+- Futtatás: `dotnet test backend/tests/Integration.Tests/Integration.Tests.csproj` (Docker kell hozzá; ~30 s). CI: külön `integration-tests` job a `backend.yml`-ben; a gyors egységtesztek külön jobban futnak.
+
 ### Még hátra a QA-ból
-- Nyitott: a valódi iOS/Safari eszközös és a valódi telefonos belépés (környezeti korlátok, lásd fent), valamint a backend **integrációs tesztek (Testcontainers)**, amelyek a repóban még nincsenek. Az E2E alapcsomag már megvan (lásd fent); bővíthető további folyamatokkal (naptár-húzás, figyelmeztetés-nyugtázás, kapcsolat megszüntetése).
+- Nyitott: a valódi iOS/Safari eszközös és a valódi telefonos belépés (környezeti korlátok, lásd fent). Az E2E és az integrációs alapcsomag megvan (lásd fent); mindkettő bővíthető további folyamatokkal (naptár-húzás, figyelmeztetés-nyugtázás, kapcsolat megszüntetése, outbox-rollback).
 
 > **Teszt-higiénia:** ha a Keycloak DB-t eldobod (pl. realm-újraimporthoz), a konzisztencia érdekében dobd el az összes adat-volume-ot is együtt: `docker compose down -v && docker compose up -d --build`. Így nem marad régi felhasználói ID-ra hivatkozó, elárvult adat a Training/Analytics/Identity adatbázisokban.
 
