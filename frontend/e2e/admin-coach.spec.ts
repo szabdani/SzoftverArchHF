@@ -17,8 +17,10 @@ test.describe('Admin és edző', () => {
 
     await page.getByRole('button', { name: 'Demóadatok létrehozása' }).click();
 
-    // A létrehozás után megjelenik a szimulált futók listája (pl. a hirtelen terhelésugrásos).
-    await expect(page.getByText('demo-spike@futoedzes.local')).toBeVisible({ timeout: 15_000 });
+    // A létrehozás után a „Demóadatok” kártya kilistázza a szimulált futókat a mintájukkal. A teljes,
+    // mintával együtt megjelenő sorra illesztünk (pl. „… · hirtelen terhelésugrás”), mert a puszta e-mail
+    // cím a felhasználótáblában is szerepel – ott csak a cím, minta nélkül.
+    await expect(page.getByText('demo-spike@futoedzes.local · hirtelen terhelésugrás')).toBeVisible({ timeout: 30_000 });
   });
 
   test('az edző Futóim listájában megjelennek a demó futók kockázattal', async ({ page }) => {
@@ -28,7 +30,15 @@ test.describe('Admin és edző', () => {
 
     // A demó edzőhöz kapcsolt futók megjelennek; a terhelésugrásos futó magas kockázatú.
     const spikeRow = page.getByRole('row', { name: /demo-spike/ });
-    await expect(spikeRow).toBeVisible({ timeout: 15_000 });
-    await expect(spikeRow.getByText('MAGAS')).toBeVisible();
+    await expect(spikeRow).toBeVisible({ timeout: 30_000 });
+
+    // A kockázati kategóriát az Analytics eseményvezérelten, aszinkron számolja (Training → RabbitMQ →
+    // Analytics), ezért a demóadatok létrejötte után nem jelenik meg azonnal. A kártya a riskScore-t és a
+    // kategória magyar címkéjét írja ki egy badge-ben (pl. „18 · Magas”); erre pollozunk a lap frissítésével,
+    // amíg az Analytics végez. A badge CSS-sel nagybetűs, de a DOM-szöveg a „Magas” címke.
+    await expect(async () => {
+      await page.reload();
+      await expect(page.getByRole('row', { name: /demo-spike/ }).getByText('Magas')).toBeVisible({ timeout: 5_000 });
+    }).toPass({ timeout: 120_000, intervals: [5_000] });
   });
 });
