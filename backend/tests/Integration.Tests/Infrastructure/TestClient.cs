@@ -1,5 +1,6 @@
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Integration.Tests.Infrastructure;
 
@@ -9,6 +10,12 @@ namespace Integration.Tests.Infrastructure;
 /// </summary>
 public static class TestClient
 {
+    /// <summary>A szerverrel azonos JSON-beállítás: a felsorolásokat camelCase stringként kezeli.</summary>
+    public static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
+    };
+
     /// <summary>Egy adott szerepkörű és azonosítójú felhasználóként hitelesített HTTP-kliens.</summary>
     public static HttpClient As(this HttpClient client, Guid userId, string role)
     {
@@ -52,7 +59,7 @@ public static class TestClient
             return null;
         }
 
-        return await response.Content.ReadFromJsonAsync<T>();
+        return await response.Content.ReadFromJsonAsync<T>(JsonOptions);
     }
 
     /// <summary>Egy JSON kérést POST-ol és visszaadja a nyers választ (a hívó ellenőrzi a státuszt).</summary>

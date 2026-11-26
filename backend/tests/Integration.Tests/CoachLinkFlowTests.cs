@@ -46,17 +46,10 @@ public class CoachLinkFlowTests(ContainerFixture containers)
         await publisher.PublishAsync(new CoachRunnerLinked(coachId, runnerId, DateTimeOffset.UtcNow));
 
         // A kapcsolat feldolgozása (Analytics CoachRunnerLinkConsumer) aszinkron: várunk, amíg az edző hozzáfér.
-        var risk = await TestClient.PollUntilAsync(async () =>
-        {
-            using var response = await coachClient.GetAsync($"/api/analytics/risk?runnerId={runnerId}");
-            if (response.StatusCode != System.Net.HttpStatusCode.OK)
-            {
-                return null;
-            }
-
-            return await response.Content.ReadFromJsonAsync<RiskResponse>();
-        });
+        var risk = await TestClient.PollUntilAsync(() =>
+            coachClient.TryGetAsync<RiskResponse>($"/api/analytics/risk?runnerId={runnerId}"));
 
         Assert.NotNull(risk);
+        Assert.NotNull(risk.Current);
     }
 }

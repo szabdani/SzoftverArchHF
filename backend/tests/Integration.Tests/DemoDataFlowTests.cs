@@ -28,12 +28,14 @@ public class DemoDataFlowTests(ContainerFixture containers)
             [new DemoRunner(runnerId, DemoRunnerPattern.SuddenSpike)],
             DateTimeOffset.UtcNow));
 
-        // A Training generál → events → Analytics számol: várunk a magas kockázatra.
+        // A Training 12 hét adatot generál és sok eseményt küld; az Analytics sorban dolgozza fel, ezért
+        // nagyvonalú a várakozási idő. A terhelésugrásos minta magas kockázatot ad.
+        var timeout = TimeSpan.FromSeconds(60);
         var risk = await TestClient.PollUntilAsync(async () =>
         {
             var result = await runnerClient.TryGetAsync<RiskResponse>($"/api/analytics/risk?runnerId={runnerId}");
             return result?.Current is { Category: RiskCategory.High } current ? current : null;
-        });
+        }, timeout);
         Assert.NotNull(risk);
 
         // Demóadatok törlése: a RunnerDataReset törli a futó Analytics-adatait.
@@ -44,7 +46,7 @@ public class DemoDataFlowTests(ContainerFixture containers)
         {
             var result = await runnerClient.TryGetAsync<RiskResponse>($"/api/analytics/risk?runnerId={runnerId}");
             return result is { Current: null } ? result : null;
-        });
+        }, timeout);
         Assert.NotNull(cleared);
     }
 }
