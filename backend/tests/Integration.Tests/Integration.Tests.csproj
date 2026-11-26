@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Testcontainers.PostgreSql" />
+    <PackageReference Include="Testcontainers.RabbitMq" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- A két szolgáltatás a WebApplicationFactory-hoz; a Contracts és a BuildingBlocks ezeken át elérhető. -->
+    <ProjectReference Include="..\..\src\Training.Api\Training.Api.csproj" />
+    <ProjectReference Include="..\..\src\Analytics.Api\Analytics.Api.csproj" />
+  </ItemGroup>
+</Project>

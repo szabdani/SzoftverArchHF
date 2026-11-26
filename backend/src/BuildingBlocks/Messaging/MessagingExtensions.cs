@@ -42,7 +42,7 @@ public static class MessagingExtensions
 
             bus.UsingRabbitMq((context, cfg) =>
             {
-                cfg.Host(rabbit.Host, rabbit.VirtualHost, host =>
+                cfg.Host(rabbit.Host, rabbit.Port, rabbit.VirtualHost, host =>
                 {
                     host.Username(rabbit.Username);
                     host.Password(rabbit.Password);

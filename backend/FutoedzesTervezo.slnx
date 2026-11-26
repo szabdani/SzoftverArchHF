@@ -10,5 +10,6 @@
     <Project Path="tests/Identity.Api.Tests/Identity.Api.Tests.csproj" />
     <Project Path="tests/Training.Api.Tests/Training.Api.Tests.csproj" />
     <Project Path="tests/Analytics.Api.Tests/Analytics.Api.Tests.csproj" />
+    <Project Path="tests/Integration.Tests/Integration.Tests.csproj" />
   </Folder>
 </Solution>
