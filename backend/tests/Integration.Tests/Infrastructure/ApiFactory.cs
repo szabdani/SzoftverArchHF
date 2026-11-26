@@ -24,23 +24,17 @@ public class ApiFactory<TEntryMarker>(ContainerFixture containers, string databa
     {
         builder.UseEnvironment("Development");
 
-        builder.ConfigureAppConfiguration((_, config) =>
-        {
-            config.AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                // A szolgáltatás adatbázisa a közös Postgres konténeren.
-                ["ConnectionStrings:Default"] = containers.ConnectionStringFor(databaseName),
-                // A közös RabbitMQ konténer (dinamikus port); mindkét szolgáltatás ide köt, így az esemény átmegy.
-                ["RabbitMq:Host"] = containers.RabbitHost,
-                ["RabbitMq:Port"] = containers.RabbitPort.ToString(),
-                ["RabbitMq:Username"] = containers.RabbitUsername,
-                ["RabbitMq:Password"] = containers.RabbitPassword,
-                ["RabbitMq:VirtualHost"] = "/",
-                // A Keycloak Authority kötelező mező; tesztben nem használjuk (teszt-auth séma), de a kötés ne bukjon.
-                ["Keycloak:Authority"] = "http://localhost/auth/realms/futoedzes",
-                ["Keycloak:RequireHttpsMetadata"] = "false",
-            });
-        });
+        // UseSetting a host-konfigurációba ír, ami felülírja az appsettings.json értékeit (az
+        // appsettings alap 5442/5443 portjait a Testcontainers dinamikus portjaira cserélve).
+        builder.UseSetting("ConnectionStrings:Default", containers.ConnectionStringFor(databaseName));
+        builder.UseSetting("RabbitMq:Host", containers.RabbitHost);
+        builder.UseSetting("RabbitMq:Port", containers.RabbitPort.ToString());
+        builder.UseSetting("RabbitMq:Username", containers.RabbitUsername);
+        builder.UseSetting("RabbitMq:Password", containers.RabbitPassword);
+        builder.UseSetting("RabbitMq:VirtualHost", "/");
+        // A Keycloak Authority kötelező mező; tesztben nem használjuk (teszt-auth séma), de a kötés ne bukjon.
+        builder.UseSetting("Keycloak:Authority", "http://localhost/auth/realms/futoedzes");
+        builder.UseSetting("Keycloak:RequireHttpsMetadata", "false");
 
         builder.ConfigureTestServices(services =>
         {

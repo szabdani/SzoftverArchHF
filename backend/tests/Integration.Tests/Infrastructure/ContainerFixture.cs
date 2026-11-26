@@ -16,16 +16,23 @@ public sealed class ContainerFixture : IAsyncLifetime
         .WithImage("postgres:18.7-alpine")
         .Build();
 
+    // Saját felhasználó: a beépített `guest` csak localhostról engedélyezett, a mapped porton át viszont
+    // a RabbitMQ nem localhostként látja a kapcsolatot, és elutasítaná.
+    private const string RabbitUser = "futoedzes";
+    private const string RabbitPass = "futoedzes";
+
     private readonly RabbitMqContainer rabbit = new RabbitMqBuilder()
         .WithImage("rabbitmq:4.4.0-management")
+        .WithUsername(RabbitUser)
+        .WithPassword(RabbitPass)
         .Build();
 
     /// <summary>A RabbitMQ host (a MassTransit `RabbitMq:Host` konfigja).</summary>
     public string RabbitHost { get; private set; } = "";
 
-    /// <summary>A RabbitMQ felhasználónév és jelszó (a Testcontainers alapértelmezése: guest/guest).</summary>
-    public string RabbitUsername => "guest";
-    public string RabbitPassword => "guest";
+    /// <summary>A RabbitMQ felhasználónév és jelszó.</summary>
+    public string RabbitUsername => RabbitUser;
+    public string RabbitPassword => RabbitPass;
 
     /// <summary>A Testcontainers által kiosztott RabbitMQ AMQP port (dinamikus).</summary>
     public int RabbitPort { get; private set; }
