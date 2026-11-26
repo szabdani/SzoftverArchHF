@@ -17,5 +17,22 @@ jobs:
           dotnet-version: 10.0.x
       - name: Build
         run: dotnet build backend/FutoedzesTervezo.slnx
-      - name: Test
-        run: dotnet test --solution backend/FutoedzesTervezo.slnx --no-build
+      # A gyors egységtesztek (adatbázis/bróker nélkül). Az integrációs tesztek külön jobban futnak,
+      # mert Docker-konténereket (Testcontainers) indítanak.
+      - name: Egységtesztek
+        run: |
+          dotnet test backend/tests/Training.Api.Tests/Training.Api.Tests.csproj --no-build
+          dotnet test backend/tests/Analytics.Api.Tests/Analytics.Api.Tests.csproj --no-build
+          dotnet test backend/tests/Identity.Api.Tests/Identity.Api.Tests.csproj --no-build
+
+  integration-tests:
+    # Integrációs tesztek valódi PostgreSQL + RabbitMQ konténerek ellen (Testcontainers). A GitHub
+    # ubuntu runnerén elérhető a Docker, így a konténerek itt elindíthatók.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+      - name: Integrációs tesztek
+        run: dotnet test backend/tests/Integration.Tests/Integration.Tests.csproj
