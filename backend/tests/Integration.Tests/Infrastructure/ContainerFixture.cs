@@ -41,7 +41,7 @@ public sealed class ContainerFixture : IAsyncLifetime
     /// <summary>Elindítja a konténereket, és létrehozza a két szolgáltatás adatbázisát.</summary>
     public async ValueTask InitializeAsync()
     {
-        await Task.WhenAll(postgres.StartAsync().AsTask(), rabbit.StartAsync().AsTask());
+        await Task.WhenAll(postgres.StartAsync(), rabbit.StartAsync());
 
         // A migrációk induláskor a meglévő adatbázisra futnak, ezért előre létrehozzuk őket.
         await postgres.ExecScriptAsync("CREATE DATABASE training;");

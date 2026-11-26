@@ -18,7 +18,7 @@ public sealed class TestPublisher : IAsyncDisposable
     {
         var bus = Bus.Factory.CreateUsingRabbitMq(cfg =>
         {
-            cfg.Host(containers.RabbitHost, containers.RabbitPort, "/", host =>
+            cfg.Host(new Uri($"rabbitmq://{containers.RabbitHost}:{containers.RabbitPort}/"), host =>
             {
                 host.Username(containers.RabbitUsername);
                 host.Password(containers.RabbitPassword);
